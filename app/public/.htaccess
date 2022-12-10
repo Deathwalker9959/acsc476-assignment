@@ -1,0 +1,4 @@
+DirectoryIndex index.php
+
+# php_value auto_prepend_file 
+php_value auto_prepend_file "../app/autoload.php"

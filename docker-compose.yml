@@ -20,7 +20,7 @@ services:
       - mysql
       - php
     volumes:
-      - ./html:/var/www/html
+      - ./app:/var/www/order.io/
       - ./Docker/nginx/conf.d/:/etc/nginx/conf.d/
     ports:
       - "8088:8088"
@@ -28,8 +28,8 @@ services:
   php:
     image: php:8.1-fpm
     volumes:
-      - ./html:/var/www/html
-      - ./Docker/php:/usr/local/etc/php/php.ini
+      - ./app:/var/www/order.io/
+      - ./Docker/php/conf/php.ini:/usr/local/etc/php/php.ini
  # Mysql configuration
   mysql:
     image: mysql:latest
