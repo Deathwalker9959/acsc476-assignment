@@ -6,7 +6,7 @@ class Route
 
     // private $routeList = [];
 
-    private static function parseController(string $location, string $function) {
+    private static function parseController(string $httpMethod, string $location, string $function) {
         $path = explode("@", $function);
         $class = $path[0];
         $method = $path[1];
@@ -15,6 +15,7 @@ class Route
 
         return [ 
             "{$location}" => [
+                "httpMethod" => strtoupper($httpMethod),
                 "controllerClass" => $controllerClass,
                 "method" => $method,
             ],
@@ -23,23 +24,23 @@ class Route
 
     public static function Get(string $location, string $function)
     {
-        return  Route::parseController($location, $function);
+        return  Route::parseController(__FUNCTION__, $location, $function);
     }
     public static function Post(string $location, string $function)
     {
-        return Route::parseController($location, $function);
+        return Route::parseController(__FUNCTION__, $location, $function);
     }
     public static function Put(string $location, string $function)
     {
-        return Route::parseController($location, $function);
+        return Route::parseController(__FUNCTION__, $location, $function);
     }
     public static function Patch(string $location, string $function)
     {
-        return Route::parseController($location, $function);
+        return Route::parseController(__FUNCTION__, $location, $function);
     }
     public static function Delete(string $location, string $function)
     {
-        return Route::parseController($location, $function);
+        return Route::parseController(__FUNCTION__, $location, $function);
     }
     
     public static function Group($options, $routes)

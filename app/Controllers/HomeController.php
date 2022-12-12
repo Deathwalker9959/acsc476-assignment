@@ -4,7 +4,7 @@
 namespace App\Controllers;
 use App\Controllers\BaseController;
 
-class HomeController implements BaseController {
+class HomeController {
     public static function index($queryParams)
     {
         echo "homecontroller";

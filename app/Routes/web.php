@@ -9,7 +9,7 @@ return [
         'prefix' => 'api',
     ], [
         Route::Get("/", "HomeController@index"),
-        Route::Get("/as", "HomeController@dam"),
+        Route::Post("/as", "HomeController@dam"),
     ]),
     Route::Group([
         'prefix' => 'none',
@@ -18,5 +18,3 @@ return [
     ]),
     Route::Get("getfucked","HomeController@inexist"),
 ];
-
-

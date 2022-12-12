@@ -1,10 +1,18 @@
 <?php
 
 namespace App;
+
+use ReflectionMethod;
+use ReflectionParameter;
+
 // Define the base path of the application
 define("ROUTES_DIR", __DIR__ . '/Routes/');
 
-class Router {
+class Router
+{
+
+    private $requestURI;
+    private $requestMethod;
 
     private function loadRoutes()
     {
@@ -12,13 +20,60 @@ class Router {
         return array_map(function ($file) {
             $res = require_once ROUTES_DIR . $file;
             return $res;
-        }, $files);
+        }, array_values($files));
+    }
+
+    private function parseModels()
+    {
+        $ref = new ReflectionMethod("App\\Controllers\\HomeController", "index");
+        $params = $ref->getParameters();
+        $calleParamClasses = array_map(function ($param) {
+            $param->getType()->getName();
+        }, $params);
+        // $routeModels
+    }
+
+    private function handleRoute()
+    {
+        $this->parseModels();
+        $isRaw = is_countable($_REQUEST) && count($_REQUEST) == 0;
+        if ($isRaw) {
+        } else {
+
+        }
+        // call_user_func_array();
+    }
+
+    private function parseRoute($value)
+    {
+        array_walk($value, function ($value, $key) {
+            $isGroup = isset($value["type"]) && $value["type"] === "group";
+
+            if ($isGroup) {
+                if (
+                    array_key_exists($this->requestURI, $value['routes'])
+                    && $value['routes'][$this->requestURI]['httpMethod'] === $this->requestMethod
+                ) {
+
+                    $this->handleRoute();
+                }
+            }
+
+        });
     }
 
     function __construct()
     {
-       $routes = $this->loadRoutes();
-       dd($routes);
+        $this->requestURI = parse_url($_SERVER["REQUEST_URI"])['path'];
+        $this->requestMethod = $_SERVER["REQUEST_METHOD"];
+        $routes = $this->loadRoutes();
+        dt(file_get_contents('php://input'));
+        dt($_REQUEST);
+
+        // dt(file_get_contents('php://input') == $_REQUEST);
+        array_map([$this, 'parseRoute'], $routes);
+
+        // echo dd($routes);
     }
 }
 
