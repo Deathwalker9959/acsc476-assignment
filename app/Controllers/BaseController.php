@@ -2,5 +2,5 @@
 namespace App\Controllers;
 
 interface BaseController {
-    public static function index();
+    public static function index($queryParams);
 }
