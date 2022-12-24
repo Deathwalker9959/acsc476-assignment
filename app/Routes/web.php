@@ -9,7 +9,7 @@ return [
         'prefix' => 'api',
     ], [
         Route::Get("/", "HomeController@index"),
-        Route::Post("/as", "HomeController@dam"),
+        Route::Get("/as", "HomeController@dam"),
     ]),
     Route::Group([
         'prefix' => 'none',

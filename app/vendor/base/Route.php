@@ -10,6 +10,7 @@ class Route
         $path = explode("@", $function);
         $class = $path[0];
         $method = $path[1];
+        $location = parse_url($location)['path'];
 
         $controllerClass = "App\\Controllers\\{$class}";
 
@@ -24,7 +25,7 @@ class Route
 
     public static function Get(string $location, string $function)
     {
-        return  Route::parseController(__FUNCTION__, $location, $function);
+        return Route::parseController(__FUNCTION__, $location, $function);
     }
     public static function Post(string $location, string $function)
     {
@@ -51,21 +52,11 @@ class Route
         $flattenedRoutes = call_user_func_array('array_merge', $routes);
 
         return [
+            "id" => random_bytes(10),
             "type" => "group",
             "prefix" => $prefix,
             "middleware" => $middleware,
             "routes" => $flattenedRoutes
         ];
-    }
-
-    protected function route($location, $httpMethod) {
-        if (isset($routeList[$location.$httpMethod])) {
-            $route = $routeList[$location.$httpMethod];
-            $controllerClass = $route['controllerClass'];
-            $method = $route['method'];
-            
-            $controller = new $controllerClass;
-            $controller->$method($_REQUEST);
-        }
     }
 }
