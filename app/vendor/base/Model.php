@@ -2,56 +2,221 @@
 
 namespace App\Models;
 
-use ErrorException;
-use mysqli;
+use PDO;
+use App\Autoloader;
+
+use App\Database\QueryBuilder;
 
 class Model
 {
     private $table;
-    private mysqli $pdo;
-    private $host;
-    private $username;
-    private $password;
-    private $database;
-    private $port;
 
-    private function connect()
+    /**
+     * The database connection.
+     *
+     * @var PDO
+     */
+    public static PDO $db;
+
+    public static $hidden;
+
+    /**
+     * The query builder instance.
+     *
+     * @var QueryBuilder
+     */
+    public static QueryBuilder $queryBuilder;
+
+    /**
+     * Set the database connection for the model.
+     *
+     * @param PDO $db The database connection to use.
+     */
+    public static function setDb(PDO $db)
     {
+        static::$db = $db;
+        static::$queryBuilder = new QueryBuilder($db);
     }
 
-    function __construct()
+    public function __construct()
     {
-        $config = APP_CONFIG;
-        $this->host = $config['database']['host'];
-        $this->username = $config['database']['username'];
-        $this->password = $config['database']['password'];
-        $this->database = $config['database']['database'];
-        $this->port = $config['database']['port'];
-        $this->table = camelToSnake((new \ReflectionClass($this))->getShortName());
-        $this->pdo = mysqli_connect($this->host, $this->username, $this->password, $this->database, $this->port);
+        static::$db = Autoloader::$db;
+        static::$queryBuilder = Autoloader::$queryBuilder;
     }
 
-    public static function Where()
-    {
-        $args = func_get_args();
-        $numArgs = func_num_args();
-        $model = new (__CLASS__);
+    public function __get($name)
+{
+    if (in_array($name, static::$hidden)) {
+        return null;
+    }
 
-        switch ($numArgs) {
-            case 2: {
-                    $column = $args[0];
-                    $eq = $args[1];
-                    break;
-                }
-            case 3: {
-                    $column = $args[0];
-                    $operator = $args[1];
-                    $eq = $args[2];
-                    break;
-                }
-            default: {
-                    return throw new ErrorException("Number of arguements in model must be between 2 and 3");
-                }
+    return $this->$name;
+}
+
+    /**
+     * Find a record by its primary key.
+     *
+     * @param int $id The primary key of the record to find.
+     *
+     * @return mixed The found record, or null if no record was found.
+     */
+    public static function find(int $id)
+    {
+        static::$queryBuilder->select()
+            ->from(static::$table)
+            ->where('id', '=', $id)
+            ->limit(1);
+
+        $stmt = static::$queryBuilder->getPDOStatement();
+        $stmt->execute();
+        $result = $stmt->fetch();
+
+        if ($result) {
+            return new static($result);
+        } else {
+            return null;
         }
+    }
+
+    /**
+     * Find all records in the table.
+     *
+     * @return array An array of all the records in the table.
+     */
+    public static function all()
+    {
+        static::$queryBuilder->select()
+            ->from(static::$table);
+
+        $stmt = static::$queryBuilder->getPDOStatement();
+        $stmt->execute();
+        $results = $stmt->fetchAll();
+
+        $objects = [];
+        foreach ($results as $result) {
+            $objects[] = new static($result);
+        }
+
+        return $objects;
+    }
+
+    /**
+     * Insert a new record into the table.
+     *
+     * @param array $attributes The attributes for the new record.
+     *
+     * @return bool Whether the insert was successful.
+     */
+    public static function insert(array $attributes)
+    {
+        static::$queryBuilder->insert($attributes)
+            ->into(static::$table);
+
+        $stmt = static::$queryBuilder->getPDOStatement();
+        return $stmt->execute();
+    }
+
+    public static function delete(int $id)
+    {
+        return static::$queryBuilder->delete()
+            ->from(static::$table)
+            ->where('id', '=', $id)
+            ->execute();
+    }
+
+    public static function count()
+    {
+        return static::$queryBuilder->select()
+            ->count()
+            ->from(static::$table)
+            ->execute()
+            ->fetchColumn();
+    }
+    public static function exists(int $id)
+    {
+        return static::$queryBuilder->select()
+            ->count()
+            ->from(static::$table)
+            ->where('id', '=', $id)
+            ->execute()
+            ->fetchColumn() > 0;
+    }
+
+    public static function max(string $column)
+    {
+        return static::$queryBuilder->select()
+            ->max($column)
+            ->from(static::$table)
+            ->execute()
+            ->fetchColumn();
+    }
+
+    /**
+     * Get the minimum value of a column in the table.
+     *
+     * @param string $column The column to get the minimum value for.
+     *
+     * @return mixed The minimum value of the column, or null if the table is empty.
+     */
+    public static function min(string $column)
+    {
+        
+        return static::$queryBuilder->table(static::$table)->min($column);
+    }
+
+    /**
+     * Get the average value of a column in the table.
+     *
+     * @param string $column The column to get the average value for.
+     *
+     * @return float The average value of the column, or null if the table is empty.
+     */
+    public static function avg(string $column)
+    {
+        return static::$queryBuilder->table(static::$table)->avg($column)->execute();
+    }
+
+    /**
+     * Get the sum of the values of a column in the table.
+     *
+     * @param string $column The column to get the sum for.
+     *
+     * @return int The sum of the values of the column.
+     */
+    public static function sum(string $column)
+    {
+        return static::$queryBuilder->table(static::$table)->sum($column)->execute();
+    }
+
+    public static function where(array $conditions)
+    {
+        $query = static::$queryBuilder->select()->from(static::$table);
+
+        foreach ($conditions as $condition) {
+            list($column, $operator, $value) = $condition;
+            $query->where($column, $operator, $value);
+        }
+
+        $results = $query->get();
+
+        $objects = [];
+        foreach ($results as $result) {
+            $objects[] = new static($result);
+        }
+
+        return $objects;
+    }
+
+
+    public static function whereIn(string $column, array $values)
+    {
+        $results = static::$queryBuilder->select()->from(static::$table)->whereIn($column, $values)->get();
+
+        $objects = [];
+        foreach ($results as $result) {
+            $objects[] = new static($result);
+        }
+
+        return $objects;
     }
 }

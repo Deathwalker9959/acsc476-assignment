@@ -3,7 +3,9 @@
 
 namespace App\Controllers;
 
-use App\Request;
+use App\Models\User;
+use App\Router\Request;
+use App\Router\Response;
 
 class HomeController {
     public static function index(Request $queryParams)
@@ -11,10 +13,10 @@ class HomeController {
         echo "homecontroller";
         dd($queryParams);
     }
-    public static function dam(Request $queryParams)
+    public static function dam(Request $queryParams , User $user)
     {
-        echo "homecontroller";
-        dd($queryParams);
+        echo "homecontroller@dam";
+        return (new Response())->view("Error.404");
     }
     public static function kek(Request $queryParams)
     {

@@ -5,9 +5,12 @@ services:
   loadbalancer:
     image: nginx:stable
     container_name: loadbalancer
+    networks:
+      - main-network
     volumes:
       - ./Docker/nginx/loadbalancer.conf.d/:/etc/nginx/conf.d/
-    network_mode: host
+    ports:
+      - "80:80"
  # Nginx server configuration   
   web:
     image: nginx:stable
@@ -16,9 +19,10 @@ services:
       - loadbalancer
       - mysql
       - php
-    links:
-      - mysql
-      - php
+    networks:
+      main-network:
+        aliases:
+          - "acsc476.web"
     volumes:
       - ./app:/var/www/order.io/
       - ./Docker/nginx/conf.d/:/etc/nginx/conf.d/
@@ -26,7 +30,14 @@ services:
       - "8088:8088"
  # Php-fpm configuration
   php:
+    build:
+      context: .
+      dockerfile: ./Docker/php/DockerFile
     image: php:8.1-fpm
+    networks:
+      - main-network
+    depends_on:
+      - loadbalancer
     volumes:
       - ./app:/var/www/order.io/
       - ./Docker/php/conf/php.ini:/usr/local/etc/php/php.ini
@@ -36,6 +47,10 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     container_name: acsc476-mysql
     restart: always
+    networks:
+      main-network:
+        aliases:
+          - "acsc476.db"
     environment:
         - MYSQL_DATABASE=dashboard
         - MYSQL_ROOT_PASSWORD=root
@@ -47,3 +62,7 @@ services:
 volumes:
   dashboard_data:
     driver: local
+# Networks
+networks:
+  main-network:
+    driver: bridge

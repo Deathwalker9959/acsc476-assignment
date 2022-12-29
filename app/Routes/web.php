@@ -6,10 +6,19 @@ use App\Router\Route;
 
 return [
     Route::Group([
-        'prefix' => 'api',
+        'middleware' => [
+            'Authenticate'
+        ]
     ], [
+        Route::Get("/{user}", "HomeController@dam"),
         Route::Get("/", "HomeController@index"),
-        Route::Get("/as", "HomeController@dam"),
+    ]),
+    Route::Group([
+         'prefix' => 'api'
+    ], [
+        Route::Get("/{user}/{user1}/asd/{user3}", "HomeController@index"),
+        Route::Get("/", "HomeController@index"),
+        // Route::Get("/as", "HomeController@dam"),
     ]),
     Route::Group([
         'prefix' => 'none',

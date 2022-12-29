@@ -1,10 +1,14 @@
 <?php
 
 return [
-    'database' => [
-        'host' => 'localhost',
-        'password' => 'root',
+    // 'enc'
+    'db' => [
+        'driver' => 'mysql',
+        'host' => 'acsc476.db',
+        'port' => '3306',
         'database' => 'dashboard',
-        'port' => 3309
-    ]
+        'username' => 'root',
+        'password' => 'root',
+        'charset' => 'utf8',
+    ],
 ];
