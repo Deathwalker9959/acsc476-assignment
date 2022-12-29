@@ -6,9 +6,6 @@ use App\Router\Route;
 
 return [
     Route::Group([
-        'middleware' => [
-            'Authenticate'
-        ]
     ], [
         Route::Get("/{user}", "HomeController@dam"),
         Route::Get("/", "HomeController@index"),

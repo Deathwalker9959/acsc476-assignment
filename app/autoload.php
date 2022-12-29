@@ -7,12 +7,15 @@ use App\Database\QueryBuilder;
 use PDO;
 use PDOException;
 
+define("APP_DIR", __DIR__);
 define("GLOBALS_DIR", __DIR__ . '/vendor/globals/');
 define("BASE_DIR", __DIR__ . '/vendor/base/');
+define("ROUTES_DIR", __DIR__ . '/Routes/');
 define("MODELS_DIR", __DIR__ . '/Models/');
 define("MIDDLEWARE_DIR", __DIR__ . '/Middleware/');
 define("CONTROLLERS_DIR", __DIR__ . '/Controllers/');
 define("VIEWS_DIR", __DIR__ . '/Views/');
+define("ASSETS_DIR", __DIR__ . '/public/assets/');
 define("APP_CONFIG", require_once(__DIR__ . '/config.php'));
 class Autoloader
 {

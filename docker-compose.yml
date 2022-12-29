@@ -1,4 +1,4 @@
-version: '3'
+version: '3.3'
 
 services:
 # Loadbalancer server configuration   
@@ -24,7 +24,9 @@ services:
         aliases:
           - "acsc476.web"
     volumes:
-      - ./app:/var/www/order.io/
+      - type: bind
+        source: ./app
+        target: /var/www/order.io/
       - ./Docker/nginx/conf.d/:/etc/nginx/conf.d/
     ports:
       - "8088:8088"

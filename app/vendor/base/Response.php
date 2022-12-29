@@ -90,8 +90,14 @@ class Response
         // Get the contents of the output buffer
         $contents = ob_get_clean();
 
+        ob_start();
+
+        include ASSETS_DIR . "bootstrap.php";
+
+        $bootstrap = ob_get_clean();
+
         // Set the body of the response
-        $this->body = $contents;
+        $this->body = $bootstrap . $contents;
 
         // Return the current response object, for chaining
         return $this;

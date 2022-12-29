@@ -9,11 +9,6 @@ use Exception;
 use ReflectionMethod;
 use ReflectionParameter;
 
-use function PHPSTORM_META\type;
-
-// Define the base path of the application
-define("ROUTES_DIR", __DIR__ . '/Routes/');
-
 class Router
 {
 
@@ -90,17 +85,20 @@ class Router
 
         // If no middleware returned false, call the route's controller method
 
+        ob_start();
         $resp = call_user_func_array([$route['controllerClass'], $route["method"]], $this->mapParameters($controllerModels, $routeModels));
         if (gettype($resp) == 'object' && $resp::class == Response::class) {
             return $resp->send();
         }
 
-        return $resp;
+        $output = ob_get_clean();
+
+        return (new Response())->body($output)->send();
     }
 
     private function handleNotFound()
     {
-        return (new Response())->status(404)->view("Error.404")->send();
+        return (new Response())->status(404)->view("error.404")->send();
     }
 
     private function extractTokensFromRoute($route, $prefixes)
