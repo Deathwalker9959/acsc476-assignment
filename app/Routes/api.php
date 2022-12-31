@@ -7,5 +7,6 @@ return [
         'prefix' => 'api'
     ], [
         Route::Post("/register", "AccountsController@handleRegister"),
+        Route::Post("/login", "AccountsController@handleLogin"),
     ]),
 ];

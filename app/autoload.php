@@ -21,6 +21,7 @@ define("SERVICES_DIR", __DIR__ . '/Services/');
 define("VIEWS_DIR", __DIR__ . '/Views/');
 define("ASSETS_DIR", __DIR__ . '/public/assets/');
 define("APP_CONFIG", require_once(__DIR__ . '/config.php'));
+define("TIME_FORMAT", 'Y-m-d H:i:s');
 class Autoloader
 {
     /**

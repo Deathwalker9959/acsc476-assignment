@@ -26,7 +26,7 @@ class QueryBuilder
      *
      * @var array
      */
-    protected array $select = ['*'];
+    protected array $select = [];
 
     /**
      * The operation is a delete operation.
@@ -41,6 +41,13 @@ class QueryBuilder
      * @var array
      */
     protected array $insert = [];
+
+    /**
+     * The columns to update.
+     *
+     * @var array
+     */
+    protected array $update = [];
 
     /**
      * The WHERE conditions for the query.
@@ -101,6 +108,22 @@ class QueryBuilder
         $this->pdo = $pdo;
     }
 
+    public function reset()
+    {
+        unset($this->table);
+        $this->select = [];
+        $this->delete = false;
+        $this->insert = [];
+        $this->update = [];
+        $this->where = [];
+        $this->limit = 0;
+        $this->orderBy = [];
+        $this->groupBy = [];
+        $this->having = [];
+        $this->join = [];
+        $this->bindings = [];
+    }
+
     /**
      * Set the table to perform the query on.
      *
@@ -132,14 +155,28 @@ class QueryBuilder
     /**
      * Set the columns to insert.
      *
-     * @param array $columns The columns to insert.
+     * @param array $colval The columns to insert.
      *
      * @return QueryBuilder This query builder instance.
      */
-    public function insert(array $columns): QueryBuilder
+    public function insert(array $values): QueryBuilder
     {
-        $this->insert = $columns;
+        $this->insert = array_keys($values);
+        $this->bindings = array_values($values);
+        return $this;
+    }
 
+    /**
+     * Set the values to update in the database.
+     *
+     * @param array $values The values to update.
+     *
+     * @return QueryBuilder This query builder instance.
+     */
+    public function update(array $values): QueryBuilder
+    {
+        $this->update = array_keys($values);
+        $this->bindings = array_values($values);
         return $this;
     }
 
@@ -147,9 +184,9 @@ class QueryBuilder
      * Add a WHERE clause to the query.
      *
      * @param string $column The column to compare.
-     * @param string $operator The operator to use for the comparison
      * @param mixed $value The value to compare with.
-     * @param string $boolean The boolean operator to use.
+     * @param string $operator [optional] The operator to use for the comparison. Default is '='.
+     * @param string $boolean [optional] The boolean operator to use. Default is 'and'.
      *
      * @return QueryBuilder This query builder instance.
      */
@@ -379,7 +416,6 @@ class QueryBuilder
     public function into(string $table): QueryBuilder
     {
         $this->table = $table;
-
         return $this;
     }
 
@@ -395,6 +431,8 @@ class QueryBuilder
         $stmt = $this->pdo->prepare($sql);
 
         $stmt->execute($this->bindings);
+
+        $this->reset();
 
         if (preg_match('/^(select|describe|pragma)/i', $sql)) {
             return $stmt->fetchAll();
@@ -414,6 +452,19 @@ class QueryBuilder
         $stmt->execute();
 
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Retrieves the first result from the query
+     *
+     * @return array The first result from the query as an associative array
+     */
+    public function first()
+    {
+        $this->select()->limit(1);
+        $stmt = $this->getPDOStatement();
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -437,21 +488,29 @@ class QueryBuilder
     {
         $sql = '';
 
-        if ($this->insert) {
-            $columns = implode(', ', array_keys($this->insert));
-            $values = implode(', ', array_fill(0, count($this->insert), '?'));
-
-            $sql .= "INSERT INTO {$this->table} ({$columns}) VALUES ({$values})";
-        }
-
         if ($this->select) {
             $columns = implode(', ', $this->select);
 
             $sql .= "SELECT {$columns} FROM {$this->table}";
         }
 
+        if ($this->insert) {
+            $columns = implode(', ', $this->insert);
+            $values = implode(', ', array_fill(0,count($this->insert),'?'));
+
+            $sql .= "INSERT INTO {$this->table} ({$columns}) VALUES ({$values})";
+        }
+
         if ($this->delete) {
             $sql .= "DELETE FROM {$this->table}";
+        }
+
+        if ($this->update) {
+            $sql .= "UPDATE {$this->table} SET ";
+            foreach ($this->update as $column => $value) {
+                $sql .= "{$column} = ?, ";
+            }
+            $sql = rtrim($sql, ', ');
         }
 
         if ($this->join) {
@@ -524,7 +583,7 @@ class QueryBuilder
         $stmt = $this->pdo->prepare($sql);
 
         foreach ($this->bindings as $key => $value) {
-            $stmt->bindParam($key + 1, $value);
+            $stmt->bindValue($key + 1, $value);
         }
 
         return $stmt;

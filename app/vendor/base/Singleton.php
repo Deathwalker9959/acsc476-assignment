@@ -45,6 +45,11 @@ class Singleton implements SingletonInterface
             self::$instance = new self();
         }
 
+        if (method_exists(self::$instance,'reset')) {
+            call_user_func([self::$instance, 'reset']);
+            dd('called');
+        }
+
         return self::$instance;
     }
 }

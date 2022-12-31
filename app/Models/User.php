@@ -1,26 +1,11 @@
 <?php
 
 namespace App\Models;
+use App\Models\Traits\SoftDeletes;
 
 class User extends Model
 {
+    use SoftDeletes;
     protected static $table = 'users';
-    public static $hidden = ['password', 'remember_token'];
-
-    public $id;
-    public $name;
-    public $password;
-    public $remember_token;
-    public $created_at;
-
-    public $updated_at;
-
-    public function __construct($data)
-    {
-        foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
-                $this->$key = $value;
-            }
-        }
-    }
+    protected $hidden = ['password', 'remember_token'];
 }

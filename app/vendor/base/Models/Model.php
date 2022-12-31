@@ -18,7 +18,30 @@ class Model
      */
     public static PDO $db;
 
-    public static $hidden;
+    /**
+     * @var object $attributes The model's attributes
+     */
+    protected $attributes;
+
+    /**
+     * @var array $hidden The attributes that should be hidden from the JSON and array representations of the model
+     */
+    protected $hidden = [];
+
+    /**
+     * The name of the primary key column.
+     *
+     * @var string
+     */
+    protected $primaryKey = 'id';
+
+    /**
+     * The usage of created_at, updated_at columns.
+     *
+     * @var boolean
+     */
+    protected $timestamps = true;
+
 
     /**
      * The query builder instance.
@@ -38,21 +61,77 @@ class Model
         static::$queryBuilder = new QueryBuilder($db);
     }
 
-    public function __construct()
+    /**
+     * Constructor
+     *
+     * @param array $attributes The model's attributes
+     */
+    public function __construct($attributes = null)
     {
         static::$db = ConnectionSingleton::getInstance()->getConnection();
         static::$queryBuilder = QueryBuilderSingleton::getInstance()->getQueryBuilder();
+
+        $this->attributes = $attributes;
     }
 
-    public function __get($name)
-{
-    if (in_array($name, static::$hidden)) {
-        return null;
+    /**
+     * Magic getter for accessing model attributes
+     *
+     * @param string $key The attribute to get
+     * @return mixed The value of the attribute, or null if the attribute does not exist
+     */
+    public function __get($key)
+    {
+        if (isset($this->attributes->$key)) {
+            return $this->attributes->$key;
+        }
+    }
+    /**
+     * Magic setter for setting model attributes
+     *
+     * @param string $key The attribute to set
+     * @param mixed $value The value to set for the attribute
+     */
+    public function __set($key, $value)
+    {
+        $this->attributes->$key = $value;
     }
 
-    return $this->$name;
-}
+    /**
+     * Returns an array representation of the model's attributes
+     *
+     * @return array The model's attributes, with any attributes in the $hidden array excluded
+     */
+    public function toArray()
+    {
+        $attributes = $this->attributes;
+        foreach ($this->hidden as $key) {
+            unset($attributes[$key]);
+        }
+        return $attributes;
+    }
 
+    /**
+     * Returns a JSON representation of the model's attributes
+     *
+     * @param int $options Options for json_encode
+     * @return string The JSON representation of the model's attributes, with any attributes in the $hidden array excluded
+     */
+    public function toJson($options = 0)
+    {
+        $attributes = $this->toArray();
+        return json_encode($attributes, $options);
+    }
+
+    /**
+     * Returns all of the model's attributes
+     *
+     * @return array The model's attributes
+     */
+    public function getAttributes()
+    {
+        return $this->attributes;
+    }
     /**
      * Find a record by its primary key.
      *
@@ -62,6 +141,7 @@ class Model
      */
     public static function find(int $id)
     {
+        static::$queryBuilder->reset();
         static::$queryBuilder->select()
             ->from(static::$table)
             ->where('id', '=', $id)
@@ -85,6 +165,7 @@ class Model
      */
     public static function all()
     {
+        static::$queryBuilder->reset();
         static::$queryBuilder->select()
             ->from(static::$table);
 
@@ -109,6 +190,7 @@ class Model
      */
     public static function insert(array $attributes)
     {
+        static::$queryBuilder->reset();
         static::$queryBuilder->insert($attributes)
             ->into(static::$table);
 
@@ -116,8 +198,27 @@ class Model
         return $stmt->execute();
     }
 
+    /**
+     * Update a record in the database.
+     *
+     * @param array $attributes The attributes to update.
+     *
+     * @return bool True if the update was successful, false otherwise.
+     */
+    public function update(array $attributes): bool
+    {
+        static::$queryBuilder->reset();
+        static::$queryBuilder->update($attributes)
+            ->table(static::$table)
+            ->where($this->primaryKey, '=', $this->{$this->primaryKey});
+
+        $stmt = static::$queryBuilder->getPDOStatement();
+        return $stmt->execute();
+    }
+
     public static function delete(int $id)
     {
+        static::$queryBuilder->reset();
         return static::$queryBuilder->delete()
             ->from(static::$table)
             ->where('id', '=', $id)
@@ -126,6 +227,7 @@ class Model
 
     public static function count()
     {
+        static::$queryBuilder->reset();
         return static::$queryBuilder->select()
             ->count()
             ->from(static::$table)
@@ -134,6 +236,7 @@ class Model
     }
     public static function exists(int $id)
     {
+        static::$queryBuilder->reset();
         return static::$queryBuilder->select()
             ->count()
             ->from(static::$table)
@@ -144,6 +247,7 @@ class Model
 
     public static function max(string $column)
     {
+        static::$queryBuilder->reset();
         return static::$queryBuilder->select()
             ->max($column)
             ->from(static::$table)
@@ -160,7 +264,7 @@ class Model
      */
     public static function min(string $column)
     {
-        
+        static::$queryBuilder->reset();
         return static::$queryBuilder->table(static::$table)->min($column);
     }
 
@@ -173,6 +277,7 @@ class Model
      */
     public static function avg(string $column)
     {
+        static::$queryBuilder->reset();
         return static::$queryBuilder->table(static::$table)->avg($column)->execute();
     }
 
@@ -185,11 +290,13 @@ class Model
      */
     public static function sum(string $column)
     {
+        static::$queryBuilder->reset();
         return static::$queryBuilder->table(static::$table)->sum($column)->execute();
     }
 
-    public static function where(array $conditions)
+    public static function where(array $conditions): QueryBuilder
     {
+        static::$queryBuilder->reset();
         $query = static::$queryBuilder->select()->from(static::$table);
 
         foreach ($conditions as $condition) {
@@ -197,26 +304,78 @@ class Model
             $query->where($column, $operator, $value);
         }
 
-        $results = $query->get();
+        return $query;
+        // $results = $query->get();
 
-        $objects = [];
-        foreach ($results as $result) {
-            $objects[] = new static($result);
-        }
+        // $objects = [];
+        // foreach ($results as $result) {
+        //     $objects[] = new static($result);
+        // }
 
-        return $objects;
+        // return $objects;
     }
 
 
-    public static function whereIn(string $column, array $values)
+    public static function whereIn(string $column, array $values): QueryBuilder
     {
-        $results = static::$queryBuilder->select()->from(static::$table)->whereIn($column, $values)->get();
+        static::$queryBuilder->reset();
+        $results = static::$queryBuilder->select()->from(static::$table)->whereIn($column, $values);
 
-        $objects = [];
-        foreach ($results as $result) {
-            $objects[] = new static($result);
+        return $results;
+        // $results = static::$queryBuilder->select()->from(static::$table)->whereIn($column, $values)->get();
+
+        // $objects = [];
+        // foreach ($results as $result) {
+        //     $objects[] = new static($result);
+        // }
+
+        // return $objects;
+    }
+
+    /**
+     * Retrieves a model object with a given attribute value, or creates a new model object with the given attribute value if one does not exist
+     *
+     * @param string $attribute The attribute to check
+     * @param mixed $value The value to check for
+     * @param array $attributes The attributes to set for the new model object if one is created
+     * @return Model The model object with the given attribute value
+     */
+    public static function firstOrCreate($attribute, $value, $attributes = [])
+    {
+        static::$queryBuilder->reset();
+        $model = static::$queryBuilder->from(static::$table)->where($attribute, '=', $value)->first();
+        if (!$model) {
+            $attributes[$attribute] = $value;
+            $model = new static($attributes);
+            $model->save();
         }
+        return $model;
+    }
 
-        return $objects;
+    /**
+     * Retrieves a model object with a given attribute value, or creates a new model object with the given attribute value if one does not exist
+     *
+     * @param string $attribute The attribute to check
+     * @param mixed $value The value to check for
+     * @param array $attributes The attributes to set for the new model object if one is created
+     * @return Model The model object with the given attribute value
+     */
+    public static function create($attributes)
+    {
+        static::$queryBuilder->reset();
+        $model = new static($attributes);
+        $model->save();
+        return $model;
+    }
+
+    public function save()
+    {
+        if (isset($this->{$this->primaryKey})) {
+            // If primary key is set, update record
+            return static::update((array) $this->attributes);
+        } else {
+            // If primary key is not set, insert new record
+            return static::insert((array)$this->attributes);
+        }
     }
 }
