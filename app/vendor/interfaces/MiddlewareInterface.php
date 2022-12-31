@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Router;
+namespace App\Interfaces;
 
 use App\Router\Request;
-use App\Router\Response;
 
 
 /**
@@ -11,7 +10,7 @@ use App\Router\Response;
  *
  * A middleware interface that defines a method for handling a request.
  */
-interface Middleware
+interface MiddlewareInterface
 {
     /**
      * Handle a request.

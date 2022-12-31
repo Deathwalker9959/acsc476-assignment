@@ -1,7 +1,6 @@
 <?php
 
 return [
-    // 'enc'
     'db' => [
         'driver' => 'mysql',
         'host' => 'acsc476.db',

@@ -1,26 +1,24 @@
 <?php
 
-require_once "../vendor/base/Route.php";
-
 use App\Router\Route;
 
 return [
-    Route::Group([
-    ], [
-        Route::Get("/{user}", "HomeController@dam"),
+    Route::Group([], [
         Route::Get("/", "HomeController@index"),
     ]),
     Route::Group([
-         'prefix' => 'api'
+        "middleware" => [
+            "auth"
+        ]
     ], [
-        Route::Get("/{user}/{user1}/asd/{user3}", "HomeController@index"),
-        Route::Get("/", "HomeController@index"),
-        // Route::Get("/as", "HomeController@dam"),
+        Route::Get("/shops", "HomeController@inexist"),
     ]),
     Route::Group([
-        'prefix' => 'none',
+        "middleware" => [
+            "checkAuth"
+        ]
     ], [
-        Route::Get("/", "HomeController@kek"),
+        Route::Get("/register", "AccountsController@register"),
+        Route::Get("/login", "AccountsController@login"),
     ]),
-    Route::Get("getfucked","HomeController@inexist"),
 ];

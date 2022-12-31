@@ -411,6 +411,8 @@ class QueryBuilder
     public function get(): array
     {
         $stmt = $this->getPDOStatement();
+        $stmt->execute();
+
         return $stmt->fetchAll();
     }
 

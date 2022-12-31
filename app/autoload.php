@@ -3,26 +3,26 @@
 
 namespace App;
 
-use App\Database\QueryBuilder;
-use PDO;
+use App\ConnectionSingleton;
+use App\QueryBuilderSingleton;
+
 use PDOException;
 
 define("APP_DIR", __DIR__);
 define("GLOBALS_DIR", __DIR__ . '/vendor/globals/');
+define("INTERFACES_DIR", __DIR__ . '/vendor/interfaces/');
 define("BASE_DIR", __DIR__ . '/vendor/base/');
+define("FACADES_DIR", __DIR__ . '/vendor/facades');
 define("ROUTES_DIR", __DIR__ . '/Routes/');
 define("MODELS_DIR", __DIR__ . '/Models/');
 define("MIDDLEWARE_DIR", __DIR__ . '/Middleware/');
 define("CONTROLLERS_DIR", __DIR__ . '/Controllers/');
+define("SERVICES_DIR", __DIR__ . '/Services/');
 define("VIEWS_DIR", __DIR__ . '/Views/');
 define("ASSETS_DIR", __DIR__ . '/public/assets/');
 define("APP_CONFIG", require_once(__DIR__ . '/config.php'));
 class Autoloader
 {
-
-    static public $db;
-    static public $queryBuilder;
-
     /**
      * Loads the global function implementation from the `vendor/globals` directory.
      *
@@ -37,116 +37,127 @@ class Autoloader
     }
 
     /**
-     * Loads the base classes from the `vendor/base` directory.
+     * Registers autoload functions for each of the following directories:
+     * - `vendor/globals`
+     * - `vendor/base`
+     * - `Models`
+     * - `Middleware`
+     * - `Controllers`
      *
      * @return void
      */
-    static public function loadBase()
+    static public function register()
     {
-        $files = array_diff(scandir(BASE_DIR), ['.', '..']);
-        array_walk($files, function ($file) {
-            require_once BASE_DIR . $file;
-        });
-    }
+        // Register an autoload function for the `vendor/interfaces` directory
+        spl_autoload_register(function ($class) {
+            $namespace = __NAMESPACE__ . '\\Interfaces\\';
+            $namespaceLen = strlen($namespace);
+            if (strcmp(substr($class, 0, $namespaceLen), __NAMESPACE__ . '\\Interfaces\\') !== 0)
+                return;
 
-    /**
-     * Loads the model classes from the `Models` directory.
-     *
-     * @return void
-     */
-    static public function loadModels()
-    {
-        $files = array_diff(scandir(MODELS_DIR), ['.', '..']);
-        array_walk($files, function ($file) {
-            require_once MODELS_DIR . $file;
-        });
-    }
-
-    static public function loadMiddleware()
-    {
-        static::loadMiddlewareRecursive(MIDDLEWARE_DIR);
-    }
-
-    /**
-     * Loads middleware classes recursively from the given directory.
-     *
-     * @param string $dir The directory to search for middleware classes.
-     *
-     * @return void
-     */
-    static private function loadMiddlewareRecursive(string $dir)
-    {
-        $files = array_diff(scandir($dir), ['.', '..']);
-        foreach ($files as $file) {
-            $path = $dir . '/' . $file;
-            if (is_dir($path)) {
-                static::loadMiddlewareRecursive($path);
-            } elseif (pathinfo($file, PATHINFO_EXTENSION) === 'php') {
-                require_once $path;
+            $file = INTERFACES_DIR . str_replace(__NAMESPACE__ . '\\Interfaces\\', '/', $class) . '.php';
+            if (file_exists($file)) {
+                require_once $file;
             }
-        }
-    }
+        });
 
-    /**
-     * Loads the controller classes from the `Controllers` directory.
-     *
-     * @return void
-     */
-    static public function loadControllers()
-    {
-        $files = array_diff(scandir(CONTROLLERS_DIR), ['.', '..']);
-        array_walk($files, function ($file) {
-            require_once CONTROLLERS_DIR . $file;
+        // Register an autoload function for the `Models` directory
+        spl_autoload_register(function ($class) {
+            $namespace = __NAMESPACE__ . '\\Models\\';
+            $namespaceLen = strlen($namespace);
+            if (strcmp(substr($class, 0, $namespaceLen), __NAMESPACE__ . '\\Models\\') !== 0)
+                return;
+            $file = MODELS_DIR . str_replace('\\', '/', substr($class, $namespaceLen)) . '.php';
+            if (file_exists($file)) {
+                require_once $file;
+                static::initializeModel($class);
+            }
+        });
+
+        // Register an autoload function for the `Middleware` directory
+        spl_autoload_register(function ($class) {
+            $namespace = __NAMESPACE__ . '\\Middleware\\';
+            $namespaceLen = strlen($namespace);
+            if (strcmp(substr($class, 0, $namespaceLen), __NAMESPACE__ . '\\Middleware\\') !== 0)
+                return;
+            $file = MIDDLEWARE_DIR . str_replace(__NAMESPACE__ . '\\Middleware\\', '/', $class) . '.php';
+            if (file_exists($file)) {
+                require_once $file;
+            }
+        });
+
+        // Register an autoload function for the `Controllers` directory
+        spl_autoload_register(function ($class) {
+            $namespace = __NAMESPACE__ . '\\Controllers\\';
+            $namespaceLen = strlen($namespace);
+            if (strcmp(substr($class, 0, $namespaceLen), __NAMESPACE__ . '\\Controllers\\') !== 0)
+                return;
+            $file = CONTROLLERS_DIR . str_replace(__NAMESPACE__ . '\\Controllers\\', '/', $class) . '.php';
+            if (file_exists($file)) {
+                require_once $file;
+            }
+        });
+
+        // Register an autoload function for the `Services` directory
+        spl_autoload_register(function ($class) {
+            $namespace = __NAMESPACE__ . '\\Services\\';
+            $namespaceLen = strlen($namespace);
+            if (strcmp(substr($class, 0, $namespaceLen), __NAMESPACE__ . '\\Services\\') !== 0)
+                return;
+            $file = SERVICES_DIR . str_replace(__NAMESPACE__ . '\\Services\\', '/', $class) . '.php';
+            if (file_exists($file)) {
+                require_once $file;
+            }
+        });
+
+        // Register an autoload function for the `vendor/facades` directory
+        spl_autoload_register(function ($class) {
+            $namespace = __NAMESPACE__ . '\\Facades\\';
+            $namespaceLen = strlen($namespace);
+            if (strcmp(substr($class, 0, $namespaceLen), __NAMESPACE__ . '\\Facades\\') !== 0)
+                return;
+            $file = FACADES_DIR . str_replace(__NAMESPACE__ . '\\Facades\\', '/', $class) . '.php';
+            if (file_exists($file)) {
+                require_once $file;
+            }
+        });
+
+        // Register an autoload function for the `vendor/base` directory
+        spl_autoload_register(function ($class) {
+            $class = substr($class, strlen(__NAMESPACE__) + 1);
+            $file = BASE_DIR . str_replace('\\', '/', $class) . '.php';
+            if (file_exists($file)) {
+                require_once $file;
+            }
         });
     }
 
+    static public function initializeModel($class) {
+        $class::$db = ConnectionSingleton::getInstance()->getConnection();
+        $class::$queryBuilder = QueryBuilderSingleton::getInstance()->getQueryBuilder();
+    }
+
 
     /**
-     * Initializes the `static::db` property of each model class to a PDO connection.
+     * Initializes the application
      *
      * @return void
      */
-    static public function initializeModels()
+    static public function initializeApplication()
     {
-        $dbConfig = APP_CONFIG['db'];
-        $driver = $dbConfig['driver'];
-        $host = $dbConfig['host'];
-        $port = $dbConfig['port'];
-        $database = $dbConfig['database'];
-        $username = $dbConfig['username'];
-        $password = $dbConfig['password'];
-        $charset = $dbConfig['charset'];
+        // Register the autoload functions
+        static::register();
 
         try {
-            // Create a new PDO connection for the current model
-            $pdo = new PDO("{$driver}:host={$host};port={$port};dbname={$database};charset={$charset}", $username, $password);
-            // set the PDO error mode to exception
-            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ);
-
-            $queryBuilder = new QueryBuilder($pdo);
-
-            // Set the `static::db` property of the current model to the PDO connection
-            static::$db = $pdo;
-            static::$queryBuilder = $queryBuilder;
+            ConnectionSingleton::getInstance();
+            QueryBuilderSingleton::getInstance();
         } catch (PDOException $e) {
             dd("Connection failed: " . $e->getMessage());
         }
 
-        $modelClasses = array_filter(get_declared_classes(), function ($class) {
-            return strpos($class, 'App\\Models\\') === 0;
-        });
-
-        array_map(function ($class) {
-            $class::$db = static::$db;
-            $class::$queryBuilder = static::$queryBuilder;
-        }, $modelClasses);
+        RouterSingleton::getInstance();
     }
 }
 
 Autoloader::loadGlobals();
-Autoloader::loadBase();
-Autoloader::loadModels();
-Autoloader::loadMiddleware();
-Autoloader::initializeModels();
-Autoloader::loadControllers();
+Autoloader::initializeApplication();

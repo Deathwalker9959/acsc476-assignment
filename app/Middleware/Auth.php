@@ -2,12 +2,10 @@
 
 namespace App\Middleware;
 
-use App\Router\Middleware;
-use App\Auth\AuthenticationException;
+use App\Interfaces\MiddlewareInterface;
 use App\Router\Request;
-use App\Router\Response;
 
-class Authenticate implements Middleware
+class Auth implements MiddlewareInterface
 {
 
     public function handle(Request $request)
@@ -20,6 +18,6 @@ class Authenticate implements Middleware
         if (session_status() == PHP_SESSION_ACTIVE && isset($_SESSION['user_id']))
             return true;
 
-       return (new Response())->view("Error.NotLoggedIn");
+        return response()->view("error.NotLoggedIn");
     }
 }

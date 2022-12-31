@@ -2,6 +2,7 @@
 
 namespace App\Database;
 
+use App\ConnectionSingleton;
 use PDO;
 
 class Transaction

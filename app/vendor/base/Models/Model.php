@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use PDO;
-use App\Autoloader;
-
+use App\ConnectionSingleton;
 use App\Database\QueryBuilder;
+use App\QueryBuilderSingleton;
 
 class Model
 {
@@ -40,8 +40,8 @@ class Model
 
     public function __construct()
     {
-        static::$db = Autoloader::$db;
-        static::$queryBuilder = Autoloader::$queryBuilder;
+        static::$db = ConnectionSingleton::getInstance()->getConnection();
+        static::$queryBuilder = QueryBuilderSingleton::getInstance()->getQueryBuilder();
     }
 
     public function __get($name)

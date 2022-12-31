@@ -66,4 +66,27 @@ class Request
         $this->post = $_POST;
         $this->files = $_FILES;
     }
+
+    /**
+     * Retrieve the value of an input parameter.
+     *
+     * @param string $key The key of the input parameter to retrieve.
+     * @param mixed $default The default value to use if the parameter does not exist.
+     * @return mixed The value of the input parameter, or the default value if it does not exist.
+     */
+    public function input($key, $default = null)
+    {
+        return isset($_REQUEST[$key]) ? $_REQUEST[$key] : $default;
+    }
+
+    /**
+     * Check if the request method is equal to the given method.
+     *
+     * @param string $method The method to check against (e.g. GET, POST, PUT, DELETE).
+     * @return bool True if the request method is equal to the given method, false otherwise.
+     */
+    public function isMethod($method)
+    {
+        return $this->method === strtoupper($method);
+    }
 }

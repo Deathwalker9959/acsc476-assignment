@@ -3,17 +3,19 @@
 
 namespace App\Controllers;
 
+use App\Controller;
 use App\Models\User;
 use App\Router\Request;
 use App\Router\Response;
 
-class HomeController {
+class HomeController extends Controller
+{
     public static function index(Request $queryParams)
     {
         return (new Response())->view('home.landing');
         // dd($queryParams);
     }
-    public static function dam(Request $queryParams , User $user)
+    public static function dam(Request $queryParams, User $user)
     {
         echo "homecontroller@dam";
         return (new Response())->view("error.404");

@@ -8,6 +8,10 @@ class Response
     private $headers = [];
     private $body;
 
+    public function __construct()
+    {
+    }
+
     /**
      * Set the status code of the response.
      *
