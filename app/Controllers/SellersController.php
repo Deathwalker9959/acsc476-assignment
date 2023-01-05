@@ -8,10 +8,10 @@ use App\Models\User;
 use App\Router\Request;
 use App\Router\Response;
 
-class HomeController extends Controller
+class SellersController extends Controller
 {
     public static function index(Request $queryParams, $loggedIn)
     {
-        return response()->view('home.Landing');
+        return response()->view('dashboard.Dashboard');
     }
 }

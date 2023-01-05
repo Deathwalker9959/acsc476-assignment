@@ -11,6 +11,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "browser-sync": "^2.27.11"
+    "browser-sync": "^2.27.11",
+    "jquery": "^3.6.3",
+    "reefjs": "^12.1.1",
+    "sweetalert2": "^11.6.16"
   }
 }

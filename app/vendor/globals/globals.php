@@ -38,12 +38,31 @@ function dd(): void
  *
  * @param mixed ...$vars The variable(s) to print
  */
-function dt(): void
+function dt()
 {
     array_map(function ($x) {
-        echo '<pre>' . htmlentities(json_encode(utf8ize($x), JSON_PRETTY_PRINT)) . '</pre>';
+        if (is_array($x)) {
+            foreach ($x as $y) {
+                dt($y);
+            }
+        } elseif (is_object($x)) {
+            if (method_exists($x, 'get_object_vars')) {
+                $x = $x->get_object_vars();
+            } else {
+                // If the argument is an object, get its protected and private
+                // properties and make them accessible.
+                $reflectionObject = new ReflectionObject($x);
+                $properties = $reflectionObject->getProperties(ReflectionProperty::IS_PROTECTED);
+                foreach ($properties as $property) {
+                    $property->setAccessible(true);
+                    $x->{$property->getName()} = $property->getValue($x);
+                }
+            }
+            echo '<pre>' . htmlentities(json_encode(utf8ize($x), JSON_PRETTY_PRINT)) . '</pre>';
+        }
     }, func_get_args());
 }
+
 
 /**
  * Converts a camelCase string to snake_case
@@ -67,6 +86,23 @@ function snakeToCamel($input): string
     return lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', $input))));
 }
 
+/**
+ * Pluralizes a word.
+ * @param string $word The word to pluralize.
+ * @return string The pluralized word.
+ */
+function pluralize($word)
+{
+    // Check if the word ends in 'y'
+    if (substr($word, -1) === 'y') {
+        // If it does, replace the 'y' with 'ies'
+        $plural = substr_replace($word, 'ies', -1);
+    } else {
+        // Otherwise, just add an 's' to the end of the word
+        $plural = $word . 's';
+    }
+    return $plural;
+}
 /**
  * Creates and returns a new Response object
  *

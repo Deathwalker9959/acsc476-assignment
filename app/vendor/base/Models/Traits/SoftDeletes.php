@@ -6,14 +6,15 @@ trait SoftDeletes
 {
     protected $deleted_at;
 
-    public static function delete(int $id)
+    public function delete(int $id)
     {
-        static::$deleted_at = date('Y-m-d H:i:s');
+        $this->attributes->deleted_at = date('Y-m-d H:i:s');
+        return $this->save();
     }
 
-    public static function restore()
+    public function restore()
     {
-        $this->deleted_at = null;
-        $this->save();
+        $this->attributes->deleted_at = null;
+        return $this->save();
     }
 }

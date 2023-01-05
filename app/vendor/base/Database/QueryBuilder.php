@@ -190,7 +190,7 @@ class QueryBuilder
      *
      * @return QueryBuilder This query builder instance.
      */
-    public function where(string $column, string $operator, $value, string $boolean = 'and'): QueryBuilder
+    public function where(string $column, string $operator, $value, string $boolean = ''): QueryBuilder
     {
         $this->where[] = compact('column', 'operator', 'value', 'boolean');
         $this->bind($value);
@@ -207,7 +207,7 @@ class QueryBuilder
      *
      * @return QueryBuilder This query builder instance.
      */
-    public function whereIn(string $column, array $values, string $boolean = 'and'): QueryBuilder
+    public function whereIn(string $column, array $values, string $boolean = ''): QueryBuilder
     {
         $this->where[] = compact('column', 'values', 'boolean');
         $this->bindArray(compact('values'));
@@ -419,6 +419,17 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * Fetches a single column from the result set.
+     *
+     * @return mixed The value of the column, or null if no rows are returned.
+     */
+    public function fetchColumn($column = 0)
+    {
+        $stmt = $this->getPDOStatement();
+        $stmt->execute();
+        return $stmt->fetchColumn($column);
+    }
 
     /**
      * Execute the query and return the result.
@@ -479,6 +490,21 @@ class QueryBuilder
         return $this;
     }
 
+    public function postProcessWhere()
+    {
+        if (!count($this->where) >= 2) {
+            return;
+        }
+
+        $boolean = "AND";
+        for ($i = 0; $i < count($this->where); $i++) {
+            if ($this->where[$i]['boolean'] === "") {
+                $this->where[$i]['boolean'] = $boolean;
+            }
+        }
+    }
+
+
     /**
      * Convert the query builder to a SQL string.
      *
@@ -487,6 +513,7 @@ class QueryBuilder
     public function toSql(): string
     {
         $sql = '';
+        $this->postProcessWhere();
 
         if ($this->select) {
             $columns = implode(', ', $this->select);
@@ -496,7 +523,7 @@ class QueryBuilder
 
         if ($this->insert) {
             $columns = implode(', ', $this->insert);
-            $values = implode(', ', array_fill(0,count($this->insert),'?'));
+            $values = implode(', ', array_fill(0, count($this->insert), '?'));
 
             $sql .= "INSERT INTO {$this->table} ({$columns}) VALUES ({$values})";
         }

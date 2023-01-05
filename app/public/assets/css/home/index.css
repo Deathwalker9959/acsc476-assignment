@@ -14,21 +14,6 @@
     font-size: 3.5rem;
   }
 }
-.site-header {
-  background-color: rgba(0, 0, 0, 0.85);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  backdrop-filter: saturate(180%) blur(20px);
-}
-
-.site-header a {
-  color: #8e8e8e;
-  transition: color 0.15s ease-in-out;
-}
-
-.site-header a:hover {
-  color: #fff;
-  text-decoration: none;
-}
 
 .hero {
   height: 768px;
@@ -105,7 +90,7 @@
 
 .product-device {
   position: absolute;
-  right: 40%;
+  right: 95%;
   bottom: 40%;
   width: 300px;
   height: 540px;
@@ -116,13 +101,25 @@
 
 .product-device-2 {
   position: absolute;
-  right: 5%;
+  right: 55%;
   bottom: -35%;
   width: 300px;
   height: 540px;
   font-size: 10vw;
   transform: rotate(30deg);
-  animation: float-burger 5s ease-in-out infinite;
+  animation: float-burger 5s ease-in-out infinite -3s;
+}
+
+.landing-image {
+  box-shadow: 5px 5px 5px rgb(68 68 68 / 0.6);
+  filter: progid:DXImageTransform.Microsoft.Blur(PixelRadius=3,MakeShadow=true,ShadowOpacity=0.30);
+  -ms-filter: "progid:DXImageTransform.Microsoft.Blur(PixelRadius=3,MakeShadow=true,ShadowOpacity=0.30)";
+  zoom: 1;
+  margin: 40px;
+}
+
+.landing-image .content {
+  position: relative;
 }
 
 @keyframes float-burger {

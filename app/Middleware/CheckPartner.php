@@ -7,7 +7,7 @@ use App\Router\Request;
 use App\Interfaces\MiddlewareInterface;
 use App\Router\MiddlewareResponse;
 
-class CheckAuth implements MiddlewareInterface
+class CheckPartner implements MiddlewareInterface
 {
 
     public function handle(Request $request)
@@ -18,7 +18,7 @@ class CheckAuth implements MiddlewareInterface
     protected function checkAuth()
     {
         $user = Session::get('user');
-        if ($user && !$user["is_partner"])
+        if ($user && $user["is_partner"])
             return true;
     }
 }

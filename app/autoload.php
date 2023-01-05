@@ -136,6 +136,7 @@ class Autoloader
     static public function initializeModel($class) {
         $class::$db = ConnectionSingleton::getInstance()->getConnection();
         $class::$queryBuilder = QueryBuilderSingleton::getInstance()->getQueryBuilder();
+        $class::$table = pluralize(camelToSnake(array_slice(explode('\\', $class), -1)[0]));
     }
 
 

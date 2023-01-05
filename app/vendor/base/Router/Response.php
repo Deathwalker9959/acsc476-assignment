@@ -146,4 +146,27 @@ class Response
         $this->header('Cache-Control', $cacheControl);
         return $this;
     }
+
+    /**
+     * Set the body of the response as a JSON string.
+     *
+     * @param mixed $data The data to encode as JSON.
+     * @param int $options Options for json_encode.
+     * @param int $statusCode The HTTP status code to set for the response.
+     * @return Response The current response object, for chaining.
+     */
+    public function json($data, $options = 0, $statusCode = 200): Response
+    {
+        // Set the status code and content type header
+        $this->status($statusCode);
+        $this->header('Content-Type', 'application/json');
+
+        // Encode the data as a JSON string
+        $json = json_encode($data, $options);
+
+        // Set the body of the response
+        $this->body($json);
+
+        return $this;
+    }
 }

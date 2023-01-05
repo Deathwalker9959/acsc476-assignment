@@ -5,12 +5,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>order.io</title>
-    <link href="assets/landing/layout.css" rel="stylesheet" />
+    <link href="assets/css/home/index.css" rel="stylesheet" />
 </head>
 
 <body>
     <header class="site-header sticky-top py-1">
-        <nav class="container d-flex flex-column flex-md-row justify-content-between">
+        <nav class="container d-flex flex-column flex-md-row justify-content-between shadow-sm">
             <a class="py-2" href="#" aria-label="Product">
                 <svg class="text-grey" xmlns="http://www.w3.org/2000/svg" fill="currentColor" width="24" height="24" viewBox="0 0 512 512">
                     <title>order.io</title>
@@ -27,8 +27,10 @@
     <main>
         <div class="hero position-relative overflow-hidden text-center bg-light">
             <div class="row h-100 align-items-center">
-                <div class="col d-flex bg-success h-100">
+                <div class="col d-flex bg-warning h-100 px-0">
                     <div class="my-auto mx-auto">
+                        <div class="product-device d-md-block fa fa-pizza-slice text-light"></div>
+                        <div class="product-device-2 d-md-block fa fa-burger text-light"></div>
                         <div class="col text-center text-light">
                             <div class="row">
                                 <div class="position-relative">
@@ -57,9 +59,12 @@
                 </div>
 
 
-                <div class="col">
-                    <div class="product-device d-md-block fa fa-pizza-slice"></div>
-                    <div class="product-device product-device-2 d-md-block fa fa-burger"></div>
+                <div class="col d-flex h-100 px-0">
+                    <div class="my-auto mx-auto">
+                        <div class="row">
+                            <img src="assets/img/food.webp" class=""></img>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

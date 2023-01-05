@@ -1,0 +1,111 @@
+.card.shop {
+  height: 256px !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 30, 0.1), 0 2px 4px 0 rgba(0, 0, 30, 0.1);
+}
+
+.row.shop-details {
+  height: 68px !important;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: thin solid #6c757d;
+  border-bottom: 0;
+  border-left: 0;
+  border-right: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.row.shop-details.loading,
+.row.shop-image.loading {
+  filter: blur(2px);
+}
+
+.dropdown-team-select {
+  min-width: 300px;
+}
+
+.dropdown-item {
+  border-radius: 1em;
+}
+
+.input-and-submit-wrapper {
+  position: relative;
+}
+
+.form-icon {
+  width: 40px;
+  position: absolute;
+  text-align: center;
+  left: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.form-icon::after {
+  content: "";
+  display: inline-block;
+  vertical-align: middle;
+  height: 35px;
+  width: 1px;
+  margin-left: 5px;
+  background: #e9eaec;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 0;
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  height: calc(1.5em + 0.75rem + 2px);
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #6e7d87;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #b0b9bf;
+  border-radius: 0.25rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+input.has-icon {
+  padding-left: 60px;
+}
+input.form-control {
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+
+.shop-details-secondary {
+  font-weight: 400;
+}
+
+.delivery-holder {
+  position: absolute;
+  width: fit-content;
+  font-size: small;
+  height: 10%;
+  right: 2em;
+  bottom: 52px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  line-height: 1.85em;
+  letter-spacing: 0.05em;
+  background-color: white;
+}
+
+/*
+* Dashboard specific css
+*/
+
+.aside {
+  min-height: 500px;
+  max-width: 330px;
+}
+
+.sidemenu {
+  border-radius: 0.5em;
+}

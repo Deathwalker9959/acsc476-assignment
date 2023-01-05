@@ -2,12 +2,15 @@
 
 namespace App;
 
+use App\Router\MiddlewareResponse;
 use App\Router\Request;
 use App\Router\Response;
 use Exception;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionParameter;
+
+use function PHPSTORM_META\type;
 
 class Router
 {
@@ -97,8 +100,10 @@ class Router
             if ($model['type'] == Request::class) {
                 return RequestSingleton::getInstance()->getRequest();
             }
-            // Get the last part of the class name
-            $modelType = $this->classToPrototype($model['type']);
+            $modelType = null;
+            if ($model['type'] !== null)
+                // Get the last part of the class name
+                $modelType = $this->classToPrototype($model['type']);
             // If the model exists in the route models, return it
             return $routeModels[$modelType] ?? null;
         }, $controllerModels)));
@@ -109,10 +114,11 @@ class Router
      *
      * @param array|null $controllerMiddleware An array of middleware for the controller method
      * @param array $group The route array
-     * @return Response|void A response object if a middleware returns one, void otherwise
+     * @return MiddlewareResponse|array A response object if a middleware returns one, void otherwise
      */
     private function handleMiddleware($controllerMiddleware, $group)
     {
+        $ret = [];
         // Check if the route has any middleware defined
         if (isset($group['middleware'])) {
             // Loop through the middleware for the route
@@ -126,9 +132,14 @@ class Router
 
                     // If the handle method returns false, stop processing the route and return a response
                     $resp = $middlewareClass->handle($this->request);
-                    if (gettype($resp) == "object" && $resp::class == Response::class) {
-                        return $resp->send();
+                    if (gettype($resp) == "object" && $resp::class == MiddleWareResponse::class && $resp->getResult() === false) {
+                        return $resp;
                     }
+
+                    $className = explode("\\", $middlewareClass::class);
+                    $lastPath = array_pop($className);
+
+                    $ret[$lastPath] = $resp;
                 }
             }
         }
@@ -146,12 +157,19 @@ class Router
 
                     // If the handle method returns false, stop processing the route and return a response
                     $resp = $middlewareClass->handle($this->request);
-                    if (gettype($resp) == "object" && $resp::class == Response::class) {
-                        return $resp->send();
+                    if (gettype($resp) == "object" && $resp::class == MiddleWareResponse::class && $resp->getResult() === false) {
+                        return $resp;
                     }
+
+                    $className = explode("\\", $middlewareClass::class);
+                    $lastPath = array_pop($className);
+
+                    $ret[$lastPath] = $resp;
                 }
             }
         }
+
+        return $ret;
     }
     /**
      * Gets the middleware for a controller class
@@ -177,16 +195,15 @@ class Router
     {
         $controllerModels = $this->getControllerModels($route);
         $routeModels = $this->fetchRouteModels($route);
-        $controllerMiddleware = $this->getControllerMiddleware($route);
-
+        $controllerMiddleware = $this->getControllerMiddleware($route);;
         $middlewareRet = $this->handleMiddleware($controllerMiddleware, $group);
-        if ($middlewareRet) {
-            return $middlewareRet;
+        if (is_object($middlewareRet) && $middlewareRet::class == MiddlewareResponse::class && $middlewareRet->getResult() === false) {
+            return $middlewareRet->getResponse()?->send();
         }
         // If no middleware returned false, call the route's controller method
 
         ob_start();
-        $resp = call_user_func_array([$route['controllerClass'], $route["method"]], $this->mapParameters($controllerModels, $routeModels));
+        $resp = call_user_func_array([$route['controllerClass'], $route["method"]], [...$this->mapParameters($controllerModels, $routeModels), $middlewareRet]);
         if (gettype($resp) == 'object' && $resp::class == Response::class) {
             return $resp->send();
         }
@@ -365,15 +382,12 @@ class Router
 
     /**
      * Hook function that stores the current URL in the session before every request.
-     *
-     * @param array $route The route data.
-     * @param array $group The group data.
      * @return bool Whether to continue processing the request.
      */
-    private function setPrevUrl($route, $group)
+    private function setPrevUrl()
     {
         // Store the current URL in the session
-        $_SESSION['prev_url'] = $_SERVER['REQUEST_URI'];
+        Session::set("prev_url", $_SERVER['REQUEST_URI']);
 
         // Continue processing the request
         return true;
@@ -446,6 +460,8 @@ class Router
         $this->requestMethod = $_SERVER["REQUEST_METHOD"];
         $this->request = RequestSingleton::getInstance()->getRequest();
         $files = $this->loadRoutes();
+
+        $this->addHook('before', [$this,'setPrevUrl']);
 
         if (!$this->runHooks('before')) {
             return;

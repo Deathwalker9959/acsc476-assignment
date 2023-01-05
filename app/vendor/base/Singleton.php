@@ -47,7 +47,6 @@ class Singleton implements SingletonInterface
 
         if (method_exists(self::$instance,'reset')) {
             call_user_func([self::$instance, 'reset']);
-            dd('called');
         }
 
         return self::$instance;

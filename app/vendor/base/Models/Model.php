@@ -9,7 +9,7 @@ use App\QueryBuilderSingleton;
 
 class Model
 {
-    private $table;
+    public static $table;
 
     /**
      * The database connection.
@@ -34,14 +34,6 @@ class Model
      * @var string
      */
     protected $primaryKey = 'id';
-
-    /**
-     * The usage of created_at, updated_at columns.
-     *
-     * @var boolean
-     */
-    protected $timestamps = true;
-
 
     /**
      * The query builder instance.
@@ -123,6 +115,12 @@ class Model
         return json_encode($attributes, $options);
     }
 
+    public static function getTable(): string
+    {
+        return static::$table;
+    }
+
+
     /**
      * Returns all of the model's attributes
      *
@@ -144,7 +142,7 @@ class Model
         static::$queryBuilder->reset();
         static::$queryBuilder->select()
             ->from(static::$table)
-            ->where('id', '=', $id)
+            ->where(static::$table . '.' . 'id', '=', $id)
             ->limit(1);
 
         $stmt = static::$queryBuilder->getPDOStatement();
@@ -219,40 +217,42 @@ class Model
     public static function delete(int $id)
     {
         static::$queryBuilder->reset();
-        return static::$queryBuilder->delete()
+        static::$queryBuilder->delete()
             ->from(static::$table)
-            ->where('id', '=', $id)
-            ->execute();
+            ->where('id', '=', $id);
+
+        $stmt = static::$queryBuilder->getPDOStatement();
+        return $stmt->execute();
     }
 
     public static function count()
     {
         static::$queryBuilder->reset();
-        return static::$queryBuilder->select()
+        static::$queryBuilder->select()
             ->count()
-            ->from(static::$table)
-            ->execute()
-            ->fetchColumn();
+            ->from(static::$table);
+
+        return static::$queryBuilder->fetchColumn();
     }
     public static function exists(int $id)
     {
         static::$queryBuilder->reset();
-        return static::$queryBuilder->select()
+        static::$queryBuilder->select()
             ->count()
             ->from(static::$table)
-            ->where('id', '=', $id)
-            ->execute()
-            ->fetchColumn() > 0;
+            ->where('id', '=', $id);
+
+        return static::$queryBuilder->fetchColumn() > 0;
     }
 
     public static function max(string $column)
     {
         static::$queryBuilder->reset();
-        return static::$queryBuilder->select()
+        static::$queryBuilder->select()
             ->max($column)
-            ->from(static::$table)
-            ->execute()
-            ->fetchColumn();
+            ->from(static::$table);
+
+        return static::$queryBuilder->fetchColumn();
     }
 
     /**
@@ -265,7 +265,10 @@ class Model
     public static function min(string $column)
     {
         static::$queryBuilder->reset();
-        return static::$queryBuilder->table(static::$table)->min($column);
+        static::$queryBuilder->table(static::$table)
+            ->min($column);
+
+        return static::$queryBuilder->fetchColumn();
     }
 
     /**
@@ -278,8 +281,59 @@ class Model
     public static function avg(string $column)
     {
         static::$queryBuilder->reset();
-        return static::$queryBuilder->table(static::$table)->avg($column)->execute();
+        static::$queryBuilder->table(static::$table)
+            ->avg($column);
+
+        return static::$queryBuilder->fetchColumn();
     }
+
+    public function hasMany(string $related, string $foreignKey, string $localKey): QueryBuilder
+    {
+        static::$queryBuilder->reset();
+        $relatedModel = new $related;
+        $relatedTable = $relatedModel::getTable();
+        $thisTable = static::getTable();
+        return static::$queryBuilder->select()
+            ->from("{$relatedTable} AS r")
+            ->join("{$thisTable} AS l", "r.{$foreignKey}", "=", "l.{$localKey}")
+            ->where("l.{$localKey}", "=", $this->{$localKey});
+    }
+    public function hasManyThrough($relatedModel, $throughModel, $foreignKey = null, $throughKey = null, $localKey = null)
+    {
+        static::$queryBuilder->reset();
+        // Set default foreign and through keys if not provided
+        if ($foreignKey === null) {
+            $foreignKey = strtolower((new $relatedModel)->getTable()) . '_id';
+        }
+        if ($throughKey === null) {
+            $throughKey = strtolower((new $throughModel)->getTable()) . '_id';
+        }
+    
+        // Get the names of the related and through tables
+        $relatedTable = $relatedModel::getTable();
+        $throughTable = $throughModel::getTable();
+    
+        // Build the query
+        $query = static::$queryBuilder
+            ->select()
+            ->from($relatedTable)
+            ->join($throughTable, $relatedTable . '.' . $foreignKey, '=', $throughTable . '.' . $throughKey)
+            ->where($throughTable . '.' . $localKey, '=', $this->attributes->{$this->primaryKey});
+    
+        // Execute the query and fetch the results
+        $stmt = $query->getPDOStatement();
+        $stmt->execute();
+        $results = $stmt->fetchAll();
+    
+        // Create an array of related model instances
+        $relatedModels = [];
+        foreach ($results as $result) {
+            $relatedModels[] = new $relatedModel($result);
+        }
+    
+        // Return the array of related models
+        return $relatedModels;
+    }    
 
     /**
      * Get the sum of the values of a column in the table.
@@ -291,7 +345,10 @@ class Model
     public static function sum(string $column)
     {
         static::$queryBuilder->reset();
-        return static::$queryBuilder->table(static::$table)->sum($column)->execute();
+        static::$queryBuilder->table(static::$table)
+            ->sum($column);
+
+        return static::$queryBuilder->fetchColumn();
     }
 
     public static function where(array $conditions): QueryBuilder
@@ -305,14 +362,6 @@ class Model
         }
 
         return $query;
-        // $results = $query->get();
-
-        // $objects = [];
-        // foreach ($results as $result) {
-        //     $objects[] = new static($result);
-        // }
-
-        // return $objects;
     }
 
 
@@ -322,14 +371,6 @@ class Model
         $results = static::$queryBuilder->select()->from(static::$table)->whereIn($column, $values);
 
         return $results;
-        // $results = static::$queryBuilder->select()->from(static::$table)->whereIn($column, $values)->get();
-
-        // $objects = [];
-        // foreach ($results as $result) {
-        //     $objects[] = new static($result);
-        // }
-
-        // return $objects;
     }
 
     /**
@@ -377,5 +418,10 @@ class Model
             // If primary key is not set, insert new record
             return static::insert((array)$this->attributes);
         }
+    }
+
+    public function get_object_vars()
+    {
+        return get_object_vars($this);
     }
 }
