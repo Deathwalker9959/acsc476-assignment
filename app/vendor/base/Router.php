@@ -200,8 +200,7 @@ class Router
         if (is_object($middlewareRet) && $middlewareRet::class == MiddlewareResponse::class && $middlewareRet->getResult() === false) {
             return $middlewareRet->getResponse()?->send();
         }
-        // If no middleware returned false, call the route's controller method
-
+        // If no middleware returned false, call the route's controller method 
         ob_start();
         $resp = call_user_func_array([$route['controllerClass'], $route["method"]], [...$this->mapParameters($controllerModels, $routeModels), $middlewareRet]);
         if (gettype($resp) == 'object' && $resp::class == Response::class) {
@@ -255,7 +254,7 @@ class Router
         return array_map(function ($model) {
             if (!isset($model['predicted_model']) || !isset($model['val']))
                 return;
-            return $model['predicted_model']::find($model['val']);
+            return $model['predicted_model']::find(intval($model['val']));
         }, $route['bindings']);
     }
 
@@ -304,7 +303,11 @@ class Router
         $realPath = $firstLevel ? substr($this->requestURI, strlen($firstLevel)) : $this->requestURI;
 
         $uriPaths = preg_split('/\//', $realPath, -1, PREG_SPLIT_NO_EMPTY) ?? [];
-        $transformedURI = array_combine($uriPaths, array_map(function ($key) use ($uriPaths, $route) {
+        if ($group) {
+            unset($uriPaths[0]);
+            $uriPaths = array_values($uriPaths);
+        }
+        $transformedURI = array_combine($uriPaths, array_map(function ($key) use ($uriPaths, $route, $group) {
             return isset($route['bindings'][$key]['token']) ? "{{$route['bindings'][$key]['token']}}" : $uriPaths[$key];
         }, array_keys($uriPaths)));
 
@@ -329,9 +332,10 @@ class Router
             return $prefix ? "/{$prefix}{$key}" : $key === $value;
         }, ARRAY_FILTER_USE_BOTH);
 
+
         // Get the first element of the filtered array
-        $ret = $prefix ? substr(reset($filtered), strlen("/{$prefix}")) : reset($filtered);
-        return $ret ? $ret : null;
+        $ret = reset($filtered);
+        return $ret;
     }
 
     /**
@@ -466,7 +470,6 @@ class Router
         if (!$this->runHooks('before')) {
             return;
         }
-
 
         foreach ($files as $file) {
             foreach ($file as $route) {

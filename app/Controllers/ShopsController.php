@@ -4,6 +4,7 @@
 namespace App\Controllers;
 
 use App\Controller;
+use App\Models\Team;
 use App\Router\Request;
 use App\Services\ShopService;
 
@@ -14,11 +15,18 @@ class ShopsController extends Controller
         return response()->view('shops.Shops');
     }
 
-    public static function indexShops(Request $request) {
+    public static function indexShops(Request $request)
+    {
         return response()->json(ShopService::indexShops())->send();
     }
 
-    public static function indexOwnedShops(Request $request) {
+    public static function indexOwnedShops(Request $request)
+    {
         return response()->json(ShopService::getOwnedShops())->send();
+    }
+
+    public static function addItem(Request $request, Team $team)
+    {
+        response()->body("hey")->send();
     }
 }

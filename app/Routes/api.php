@@ -4,6 +4,12 @@ use App\Router\Route;
 
 return [
     Route::Group([
+        'prefix' => 'partner',
+        // 'middleware' => ['authPartner']
+    ], [
+        Route::Get("/api/shops/{team}/products/add", "ShopsController@addItem"),
+    ]),
+    Route::Group([
         'prefix' => 'api'
     ], [
         Route::Post("/register", "AccountsController@handleRegister"),
@@ -29,7 +35,7 @@ return [
     ]),
     Route::Group([
         'prefix' => 'partner',
-        'middleware' => ['authPartner']
+        // 'middleware' => ['authPartner']
     ], [
         Route::Get("/api/shops", "ShopsController@indexOwnedShops"),
     ]),

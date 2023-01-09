@@ -109,3 +109,21 @@ input.form-control {
 .sidemenu {
   border-radius: 0.5em;
 }
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.add-object {
+  background-color: rgba(109, 118, 126, 0.2);
+  transition: background-color ease-in-out 0.2s;
+  border-radius: 0.5em;
+}
+
+.add-object:hover {
+  background-color: rgba(109, 118, 126, 0.5);
+}
+
+.swal2-input.swal2-select {
+  height: auto;
+}

@@ -107,6 +107,14 @@ use App\Session;
                     </div>
                 </div>
                 <div id="spa-container" class="col-12 col-md-9">
+                    <div class="row">
+                        <div class="col-12 d-flex justify-content-center align-items-center cursor-pointer add-object" id="addItem">
+                            <div class="text-center">
+                                <p class="my-1">Add Product</p>
+                                <i class="fas fa-plus fa-3x text-secondary"></i>
+                            </div>
+                        </div>
+                    </div>  
                 </div>
             </div>
         </div>
