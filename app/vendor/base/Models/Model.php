@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HardDeletes;
+use App\Models\Traits\SoftDeletes;
+use App\Models\Traits\Timestamps;
 use PDO;
 use App\ConnectionSingleton;
 use App\Database\QueryBuilder;
@@ -33,7 +36,7 @@ class Model
      *
      * @var string
      */
-    protected $primaryKey = 'id';
+    protected static $primaryKey = 'id';
 
     /**
      * The query builder instance.
@@ -193,7 +196,7 @@ class Model
             ->into(static::$table);
 
         $stmt = static::$queryBuilder->getPDOStatement();
-        return $stmt->execute();
+        return $stmt->execute() ? static::$queryBuilder->lastInsertId() : false;
     }
 
     /**
@@ -201,11 +204,11 @@ class Model
      *
      * @param array $attributes The attributes to update.
      *
-     * @return bool True if the update was successful, false otherwise.
      */
-    public function update(array $attributes): bool
+    public function update(array $attributes)
     {
         static::$queryBuilder->reset();
+        unset($attributes[$this->primaryKey]);
         static::$queryBuilder->update($attributes)
             ->table(static::$table)
             ->where($this->primaryKey, '=', $this->{$this->primaryKey});
@@ -217,12 +220,22 @@ class Model
     public static function delete(int $id)
     {
         static::$queryBuilder->reset();
-        static::$queryBuilder->delete()
-            ->from(static::$table)
-            ->where('id', '=', $id);
+        if (static::hasSoftDeletes()) {
+            $timestamps = ['deleted_at' => date('Y-m-d H:i:s')];
+            static::$queryBuilder->update($timestamps)
+                ->table(static::$table)
+                ->where(static::$primaryKey, '=', $id);
 
-        $stmt = static::$queryBuilder->getPDOStatement();
-        return $stmt->execute();
+            $stmt = static::$queryBuilder->getPDOStatement();
+            return $stmt->execute();
+        } else {
+            static::$queryBuilder->delete()
+                ->from(static::$table)
+                ->where('id', '=', $id);
+
+            $stmt = static::$queryBuilder->getPDOStatement();
+            return $stmt->execute();
+        }
     }
 
     public static function count()
@@ -308,32 +321,33 @@ class Model
         if ($throughKey === null) {
             $throughKey = strtolower((new $throughModel)->getTable()) . '_id';
         }
-    
+
         // Get the names of the related and through tables
         $relatedTable = $relatedModel::getTable();
         $throughTable = $throughModel::getTable();
-    
+
         // Build the query
         $query = static::$queryBuilder
             ->select()
             ->from($relatedTable)
             ->join($throughTable, $relatedTable . '.' . $foreignKey, '=', $throughTable . '.' . $throughKey)
             ->where($throughTable . '.' . $localKey, '=', $this->attributes->{$this->primaryKey});
-    
+
         // Execute the query and fetch the results
         $stmt = $query->getPDOStatement();
+        dd($query->toSql());
         $stmt->execute();
         $results = $stmt->fetchAll();
-    
+
         // Create an array of related model instances
         $relatedModels = [];
         foreach ($results as $result) {
             $relatedModels[] = new $relatedModel($result);
         }
-    
+
         // Return the array of related models
         return $relatedModels;
-    }    
+    }
 
     /**
      * Get the sum of the values of a column in the table.
@@ -388,9 +402,9 @@ class Model
         if (!$model) {
             $attributes[$attribute] = $value;
             $model = new static($attributes);
-            $model->save();
+            return $model->save();
         }
-        return $model;
+        return null;
     }
 
     /**
@@ -406,6 +420,7 @@ class Model
         static::$queryBuilder->reset();
         $model = new static($attributes);
         $model->save();
+        $model->attributes['id'] = static::$queryBuilder->lastInsertId();
         return $model;
     }
 
@@ -413,11 +428,40 @@ class Model
     {
         if (isset($this->{$this->primaryKey})) {
             // If primary key is set, update record
+            if (self::hasTimestamps()) {
+                $this->attributes['updated_at'] = date('Y-m-d H:i:s');
+            }
             return static::update((array) $this->attributes);
         } else {
             // If primary key is not set, insert new record
+            if (self::hasTimestamps()) {
+                $this->attributes['created_at'] = date('Y-m-d H:i:s');
+                $this->attributes['updated_at'] = date('Y-m-d H:i:s');
+            }
             return static::insert((array)$this->attributes);
         }
+    }
+
+    /**
+     * Check if the model has the "Timestamps" trait.
+     *
+     * @return bool True if the model has the "Timestamps" trait, false otherwise.
+     */
+    public static function hasTimestamps()
+    {
+        $traits = class_uses(static::class);
+        return in_array(Timestamps::class, $traits);
+    }
+
+    /**
+     * Check if the model has the "SoftDeletes" trait.
+     *
+     * @return bool True if the model has the "SoftDeletes" trait, false otherwise.
+     */
+    public static function hasSoftDeletes()
+    {
+        $traits = class_uses(static::class);
+        return in_array(SoftDeletes::class, $traits);
     }
 
     public function get_object_vars()

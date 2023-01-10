@@ -534,7 +534,7 @@ class QueryBuilder
 
         if ($this->update) {
             $sql .= "UPDATE {$this->table} SET ";
-            foreach ($this->update as $column => $value) {
+            foreach ($this->update as $column) {
                 $sql .= "{$column} = ?, ";
             }
             $sql = rtrim($sql, ', ');
@@ -592,6 +592,10 @@ class QueryBuilder
         }
 
         return $sql;
+    }
+
+    public function lastInsertId() {
+        return $this->pdo->lastInsertId();
     }
 
     /**

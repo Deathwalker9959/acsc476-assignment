@@ -76,8 +76,35 @@ class Request
      */
     public function input($key, $default = null)
     {
-        return isset($_REQUEST[$key]) ? $_REQUEST[$key] : $default;
+        if (isset($_REQUEST[$key])) {
+            $value = $_REQUEST[$key];
+            if (is_array($value)) {
+                return $value;
+            } else {
+                return trim($value);
+            }
+        } else {
+            $jsonData = json_decode($this->body, true);
+            if (isset($jsonData[$key])) {
+                return $jsonData[$key];
+            } else {
+                return $default;
+            }
+        }
+    }    
+
+    /**
+     * Retrieve the value of an uploaded file input.
+     *
+     * @param string $key The key of the uploaded file input to retrieve.
+     * @param mixed $default The default value to use if the input does not exist.
+     * @return mixed The value of the uploaded file input, or the default value if it does not exist.
+     */
+    public function file($key, $default = null)
+    {
+        return isset($this->files[$key]) ? $this->files[$key] : $default;
     }
+
 
     /**
      * Check if the request method is equal to the given method.

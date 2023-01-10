@@ -40,10 +40,13 @@ function dd(): void
  */
 function dt()
 {
-    array_map(function ($x) {
-        if (is_array($x)) {
+    $result = '';
+    foreach (func_get_args() as $x) {
+        if (!is_array($x) && !is_object($x)) {
+            $result .= var_export($x, true);
+        } elseif (is_array($x)) {
             foreach ($x as $y) {
-                dt($y);
+                $result .= dt($y);
             }
         } elseif (is_object($x)) {
             if (method_exists($x, 'get_object_vars')) {
@@ -58,11 +61,12 @@ function dt()
                     $x->{$property->getName()} = $property->getValue($x);
                 }
             }
-            echo '<pre>' . htmlentities(json_encode(utf8ize($x), JSON_PRETTY_PRINT)) . '</pre>';
+            $result .= '<pre>' . htmlentities(json_encode(utf8ize($x), JSON_PRETTY_PRINT)) . '</pre>';
         }
-    }, func_get_args());
+    }
+    response()->body($result)->send();
+    return;
 }
-
 
 /**
  * Converts a camelCase string to snake_case

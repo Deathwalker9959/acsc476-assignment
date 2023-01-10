@@ -101,7 +101,7 @@ class Router
                 return RequestSingleton::getInstance()->getRequest();
             }
             $modelType = null;
-            if ($model['type'] !== null)
+            if (!empty($model) && $model['type'] !== null)
                 // Get the last part of the class name
                 $modelType = $this->classToPrototype($model['type']);
             // If the model exists in the route models, return it
@@ -116,7 +116,7 @@ class Router
      * @param array $group The route array
      * @return MiddlewareResponse|array A response object if a middleware returns one, void otherwise
      */
-    private function handleMiddleware($controllerMiddleware, $group)
+    private function handleMiddleware($controllerMiddleware, $group, $models)
     {
         $ret = [];
         // Check if the route has any middleware defined
@@ -131,7 +131,7 @@ class Router
                 if (method_exists($middlewareClass, 'handle')) {
 
                     // If the handle method returns false, stop processing the route and return a response
-                    $resp = $middlewareClass->handle($this->request);
+                    $resp = $middlewareClass->handle($this->request, $models);
                     if (gettype($resp) == "object" && $resp::class == MiddleWareResponse::class && $resp->getResult() === false) {
                         return $resp;
                     }
@@ -196,7 +196,7 @@ class Router
         $controllerModels = $this->getControllerModels($route);
         $routeModels = $this->fetchRouteModels($route);
         $controllerMiddleware = $this->getControllerMiddleware($route);;
-        $middlewareRet = $this->handleMiddleware($controllerMiddleware, $group);
+        $middlewareRet = $this->handleMiddleware($controllerMiddleware, $group, $routeModels);
         if (is_object($middlewareRet) && $middlewareRet::class == MiddlewareResponse::class && $middlewareRet->getResult() === false) {
             return $middlewareRet->getResponse()?->send();
         }
@@ -236,6 +236,10 @@ class Router
         $realPath = $firstLevel ? substr($this->requestURI, strlen($firstLevel) + 1) : $this->requestURI;
 
         $uriPaths = preg_split('/\//', $realPath, -1, PREG_SPLIT_NO_EMPTY) ?? [];
+        if ($prefixes) {
+            unset($uriPaths[0]);
+            $uriPaths = array_values($uriPaths);
+        }
         $transformedURI = array_map(function ($value, $key) use ($uriPaths, $route) {
             return $uriPaths[$key] = isset($route['bindings'][$key]['token']) ? $uriPaths[$key] : null;
         }, $uriPaths, array_keys($uriPaths));
@@ -251,11 +255,12 @@ class Router
      */
     private function fetchRouteModels($route): array
     {
-        return array_map(function ($model) {
+        $ret = array_map(function ($model) {
             if (!isset($model['predicted_model']) || !isset($model['val']))
                 return;
             return $model['predicted_model']::find(intval($model['val']));
         }, $route['bindings']);
+        return $ret;
     }
 
     /**
@@ -307,11 +312,8 @@ class Router
             unset($uriPaths[0]);
             $uriPaths = array_values($uriPaths);
         }
-        $transformedURI = array_combine($uriPaths, array_map(function ($key) use ($uriPaths, $route, $group) {
-            return isset($route['bindings'][$key]['token']) ? "{{$route['bindings'][$key]['token']}}" : $uriPaths[$key];
-        }, array_keys($uriPaths)));
 
-        return "/" . implode("/", $transformedURI);
+        return "/" . implode("/", $uriPaths);
     }
 
     private function transformRouteKeys($key, $prefix)
@@ -328,10 +330,11 @@ class Router
     private function getFirstMatch(array $arr, string $prefix = null)
     {
         // Filter the array based on the condition that the key is equal to the value
-        $filtered = array_filter($arr, function ($key, $value) use ($prefix) {
+        $filtered = array_filter($arr, function ($value, $key) use ($prefix) {
             return $prefix ? "/{$prefix}{$key}" : $key === $value;
         }, ARRAY_FILTER_USE_BOTH);
 
+        $filtered = array_flip($filtered);
 
         // Get the first element of the filtered array
         $ret = reset($filtered);
@@ -352,7 +355,6 @@ class Router
         $firstLevel = explode('/', $this->requestURI)[1];
         $routeObject = $route['routes'] ?? $route;
         $prefixes = array_fill(0, count($routeObject), $route['prefix']);
-        // $routeKeys = !isset($route['prefix']) ? array_keys($routeObject) : array_map([$this,'transformRouteKeys'],array_keys($routeObject),$prefixes);
         $uriPrototypes = array_combine(array_keys($routeObject), array_map([$this, 'transformGroupToRoutePrototype'], $routeObject, $prefixes));
         $requestURIPrototype = $this->getFirstMatch($uriPrototypes, $route['prefix']) ?? $this->requestURI;
 
@@ -360,10 +362,6 @@ class Router
             $route['routes'][$requestURIPrototype] : (isset($route[$requestURIPrototype])
                 ? $route[$requestURIPrototype] :
                 null);
-
-        if ($this->hasBindings($matchedRoute)) {
-            $this->formatBindings($matchedRoute, $prefixes);
-        }
 
         if (
             $isGroup
@@ -375,11 +373,17 @@ class Router
             && isset($route['routes'][$requestURIPrototype])
             && $route['routes'][$requestURIPrototype]['httpMethod'] === $this->requestMethod
         ) {
+            if ($this->hasBindings($matchedRoute)) {
+                $this->formatBindings($matchedRoute, $prefixes);
+            }
             return $matchedRoute;
         } elseif (
             isset($route[$requestURIPrototype])
             && $route[$requestURIPrototype]['httpMethod'] === $this->requestMethod
         ) {
+            if ($this->hasBindings($matchedRoute)) {
+                $this->formatBindings($matchedRoute, $prefixes);
+            }
             return $matchedRoute;
         }
     }

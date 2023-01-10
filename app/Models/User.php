@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-use App\Models\Traits\TimeStamps;
+use App\Models\Traits\Timestamps;
 
 class User extends Model
 {
-    use TimeStamps;
+    use Timestamps;
     public static $table = 'users';
     protected $hidden = ['password', 'remember_token'];
 }

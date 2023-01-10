@@ -1,9 +1,9 @@
 <?php
 
 namespace App\Models;
-use App\Models\Traits\TimeStamps;
+use App\Models\Traits\Timestamps;
 
-class User extends Model
+class Hazard extends Model
 {
-    use TimeStamps;
+    use Timestamps;
 }

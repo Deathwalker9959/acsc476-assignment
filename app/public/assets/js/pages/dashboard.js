@@ -24,7 +24,7 @@ const loadData = async () => {
 
 const addItem = (categories, hazards, ingredients) => {
   new swal({
-    title: "Multiple inputs",
+    title: "Add Item",
     html: /*html*/ `
         <input id="itemName" type="text" class="swal2-input" placeholder="Item Name">
         <input id="itemPrice" type="number" class="swal2-input" placeholder="Item Price">

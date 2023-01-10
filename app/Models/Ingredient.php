@@ -3,7 +3,7 @@
 namespace App\Models;
 use App\Models\Traits\Timestamps;
 
-class TeamCategory extends Model
+class Ingredient extends Model
 {
     use Timestamps;
 }

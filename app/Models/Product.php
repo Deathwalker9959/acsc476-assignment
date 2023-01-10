@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use App\Models\Traits\SoftDeletes;
-use App\Models\Traits\TimeStamps;
+use App\Models\Traits\Timestamps;
 
 class Product extends Model
 {
-    use TimeStamps, SoftDeletes;
+    use Timestamps, SoftDeletes;
 }

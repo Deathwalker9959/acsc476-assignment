@@ -2,7 +2,7 @@
 
 namespace App\Models\Traits;
 
-trait TimeStamps
+trait Timestamps
 {
 
     /**

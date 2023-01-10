@@ -10,7 +10,7 @@ use App\Router\MiddlewareResponse;
 class CheckPartner implements MiddlewareInterface
 {
 
-    public function handle(Request $request)
+    public function handle(Request $request, $models)
     {
         return $this->checkAuth();
     }

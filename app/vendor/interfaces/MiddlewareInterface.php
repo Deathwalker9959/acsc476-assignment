@@ -17,5 +17,5 @@ interface MiddlewareInterface
      *
      * @param Request $request The request to be handled.
      */
-    public function handle(Request $request);
+    public function handle(Request $request, $models);
 }
