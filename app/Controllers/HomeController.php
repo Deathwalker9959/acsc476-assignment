@@ -4,9 +4,7 @@
 namespace App\Controllers;
 
 use App\Controller;
-use App\Models\User;
 use App\Router\Request;
-use App\Router\Response;
 
 class HomeController extends Controller
 {

@@ -5,7 +5,6 @@ namespace App\Controllers;
 
 use App\Controller;
 use App\HttpStatusCodes;
-use App\Middleware\Auth;
 use App\Router\Request;
 use App\Router\RequestValidator;
 use App\Services\AccountService;

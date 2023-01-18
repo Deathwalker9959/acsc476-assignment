@@ -8,11 +8,10 @@ use App\Router\Request;
 use App\Models\Team;
 use App\Models\Product;
 use App\Router\RequestValidator;
-use App\Facades\Image;
 use App\HttpStatusCodes;
-use App\Models\ProductCategory;
-use App\Models\ProductHazard;
-use App\Models\ProductIngredient;
+use App\Models\Category;
+use App\Models\Hazard;
+use App\Models\Ingredient;
 use App\Services\CategoriesService;
 use App\Services\HazardsService;
 use App\Services\IngredientsService;
@@ -21,7 +20,6 @@ use Exception;
 
 class SellersController extends Controller
 {
-
     private static function validate(Request $request, array $keys)
     {
         if (!RequestValidator::validateInputKeys($request, $keys)) {
@@ -36,6 +34,18 @@ class SellersController extends Controller
         return response()->view('dashboard.Dashboard');
     }
 
+    public static function indexAll(Request $queryParams, Team $team)
+    {
+        $respObject = [
+            "products" => ProductService::indexProducts($team),
+            "categories" => CategoriesService::indexCategories($team),
+            "hazards" => HazardsService::indexHazards($team),
+            "ingredients" => IngredientsService::indexIngredients($team)
+        ];
+
+        return response()->json($respObject)->send();
+    }
+
     public static function indexProducts(Request $request, Team $team)
     {
         return response()->json(ProductService::indexProducts($team))->send();
@@ -44,8 +54,7 @@ class SellersController extends Controller
     public static function removeProduct(Request $request, Team $team, Product $product)
     {
         try {
-            ProductService::removeProduct($product->id);
-
+            ProductService::removeProduct($product);
             response()->status(200)->send();
         } catch (Exception $err) {
             response()->status(HttpStatusCodes::HTTP_INTERNAL_SERVER_ERROR)->body($err)->send();
@@ -56,14 +65,14 @@ class SellersController extends Controller
     public static function updateProduct(Request $request, Team $team, Product $product)
     {
 
-        if ($validate = static::validate($request, ['attributes']) !== true) {
+        $validate = static::validate($request, ['attributes']);
+        if ($validate !== true)
             return $validate;
-        }
 
-        $attributes = $request->input("attributes");
+        $attributes = json_decode($request->input("attributes"));
 
         try {
-            ProductService::updateProduct($product->id, $attributes);
+            ProductService::updateProduct($product, (array)$attributes);
             response()->status(200)->send();
         } catch (Exception $err) {
             response()->status(HttpStatusCodes::HTTP_INTERNAL_SERVER_ERROR)->body($err)->send();
@@ -72,51 +81,51 @@ class SellersController extends Controller
 
     public static function addProduct(Request $request, Team $team)
     {
-        if ($validate = static::validate($request, ['name']) !== true) {
+        $validate = static::validate($request, ['name', 'price']);
+        if ($validate !== true)
             return $validate;
-        }
 
-        $ret = ProductService::createProduct($request, $team);
-        if ($ret !== true) {
-            return response()->status(HttpStatusCodes::HTTP_BAD_REQUEST)->body($ret)->send();
+        try {
+            $ret = ProductService::createProduct($request, $team);
+        } catch (Exception $err) {
+            return response()->status(HttpStatusCodes::HTTP_BAD_REQUEST)->body($err->getMessage())->send();
         }
-
         return response()->status(HttpStatusCodes::HTTP_OK)->send();
     }
 
     public static function addIngredient(Request $request, Team $team)
     {
 
-        if ($validate = static::validate($request, ['name']) !== true) {
+        $validate = static::validate($request, ['name']);
+        if ($validate !== true)
             return $validate;
-        }
 
-        $ret = IngredientsService::addIngredient($request, $team);
-        if ($ret !== true) {
-            return response()->status(HttpStatusCodes::HTTP_BAD_REQUEST)->body($ret)->send();
+        try {
+            $ret = IngredientsService::addIngredient($request, $team);
+        } catch (Exception $err) {
+            return response()->status(HttpStatusCodes::HTTP_BAD_REQUEST)->body($err->getMessage())->send();
         }
-
         return response()->status(HttpStatusCodes::HTTP_OK)->send();
     }
 
-    public static function removeIngredient(Request $request, Team $team, Product $product)
+    public static function removeIngredient(Request $request, Ingredient $product)
     {
         try {
             IngredientsService::removeIngredient($product->id);
 
             response()->status(200)->send();
         } catch (Exception $err) {
-            response()->status(HttpStatusCodes::HTTP_INTERNAL_SERVER_ERROR)->body($err)->send();
+            response()->status(HttpStatusCodes::HTTP_INTERNAL_SERVER_ERROR)->body("Could not remove")->send();
         }
     }
 
 
-    public static function updateIngredient(Request $request, Team $team, Product $product)
+    public static function updateIngredient(Request $request, Ingredient $product)
     {
 
-        if ($validate = static::validate($request, ['attributes']) !== true) {
+        $validate = static::validate($request, ['attributes']);
+        if ($validate !== true)
             return $validate;
-        }
 
         $attributes = $request->input("attributes");
 
@@ -124,93 +133,93 @@ class SellersController extends Controller
             IngredientsService::updateIngredient($product->id, $attributes);
             response()->status(200)->send();
         } catch (Exception $err) {
-            response()->status(HttpStatusCodes::HTTP_INTERNAL_SERVER_ERROR)->body($err)->send();
+            response()->status(HttpStatusCodes::HTTP_INTERNAL_SERVER_ERROR)->body("Could not update")->send();
         }
     }
 
     public static function addHazard(Request $request, Team $team)
     {
 
-        if ($validate = static::validate($request, ['name']) !== true) {
+        $validate = static::validate($request, ['name']);
+        if ($validate !== true)
             return $validate;
-        }
 
-        $ret = HazardsService::addHazard($request);
-        if ($ret !== true) {
-            return response()->status(HttpStatusCodes::HTTP_BAD_REQUEST)->body($ret)->send();
+        try {
+            $ret = HazardsService::addHazard($request, $team);
+        } catch (Exception $err) {
+            return response()->status(HttpStatusCodes::HTTP_BAD_REQUEST)->body("Could not create")->send();
         }
-
         return response()->status(HttpStatusCodes::HTTP_OK)->send();
     }
 
-    public static function removeHazard(Request $request, Team $team, Product $product)
+    public static function removeHazard(Request $request, Team $team, Hazard $product)
     {
         try {
-            HazardsService::removeHazard($product->id);
+            HazardsService::removeHazard($product->id, $team);
 
             response()->status(200)->send();
         } catch (Exception $err) {
-            response()->status(HttpStatusCodes::HTTP_INTERNAL_SERVER_ERROR)->body($err)->send();
+            response()->status(HttpStatusCodes::HTTP_INTERNAL_SERVER_ERROR)->body("Could not remove")->send();
         }
     }
 
-    public static function updateHazard(Request $request, Team $team, Product $product)
+    public static function updateHazard(Request $request, Team $team, Hazard $product)
     {
 
-        if ($validate = static::validate($request, ['attributes']) !== true) {
+        $validate = static::validate($request, ['attributes']);
+        if ($validate !== true)
             return $validate;
-        }
 
         $attributes = $request->input("attributes");
 
         try {
-            HazardsService::updateHazard($product->id, $attributes);
+            HazardsService::updateHazard($product->id, $attributes, $team);
             response()->status(200)->send();
         } catch (Exception $err) {
-            response()->status(HttpStatusCodes::HTTP_INTERNAL_SERVER_ERROR)->body($err)->send();
+            response()->status(HttpStatusCodes::HTTP_INTERNAL_SERVER_ERROR)->body("Could not update")->send();
         }
     }
 
     public static function addCategory(Request $request, Team $team)
     {
 
-        if ($validate = static::validate($request, ['name']) !== true) {
+        $validate = static::validate($request, ['name']);
+        if ($validate !== true)
             return $validate;
-        }
 
-        $ret = CategoriesService::addCategory($request);
-        if ($ret !== true) {
-            return response()->status(HttpStatusCodes::HTTP_BAD_REQUEST)->body($ret)->send();
+        try {
+            $ret = CategoriesService::addCategory($request, $team);
+        } catch (Exception $err) {
+            return response()->status(HttpStatusCodes::HTTP_BAD_REQUEST)->body($err->getMessage())->send();
         }
-
         return response()->status(HttpStatusCodes::HTTP_OK)->send();
     }
 
-    public static function removeCategory(Request $request, Team $team, Product $product)
+    public static function removeCategory(Request $request, Team $team, Category $product)
     {
         try {
-            CategoriesService::removeCategory($product->id);
+            CategoriesService::removeCategory($product->id, $team);
 
             response()->status(200)->send();
         } catch (Exception $err) {
-            response()->status(HttpStatusCodes::HTTP_INTERNAL_SERVER_ERROR)->body($err)->send();
+            response()->status(HttpStatusCodes::HTTP_INTERNAL_SERVER_ERROR)->body("Could not remove")->send();
         }
     }
 
-    public static function updateCategory(Request $request, Team $team, Product $product)
+    public static function updateCategory(Request $request, Team $team, Category $product)
     {
 
-        if ($validate = static::validate($request, ['attributes']) !== true) {
+        $validate = static::validate($request, ['attributes']);
+        if ($validate !== true)
             return $validate;
-        }
 
         $attributes = $request->input("attributes");
 
         try {
-            CategoriesService::updateCategory($product->id, $attributes);
+            CategoriesService::updateCategory($product->id, $team, $attributes);
             response()->status(200)->send();
         } catch (Exception $err) {
-            response()->status(HttpStatusCodes::HTTP_INTERNAL_SERVER_ERROR)->body($err)->send();
+            response()->status(HttpStatusCodes::HTTP_INTERNAL_SERVER_ERROR)->body("Could not update")->send();
         }
     }
 }

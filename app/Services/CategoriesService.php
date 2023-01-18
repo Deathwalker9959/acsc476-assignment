@@ -10,9 +10,7 @@ class CategoriesService
 {
     public static function indexCategories(Team $team)
     {
-        $products = array_map(function ($product) {
-            return $product->getAttributes();
-        }, Category::where(['team_id', '=', $team->id])->get());
+        $products = Category::where([['team_id', '=', $team->id]])->get();
 
         return $products;
     }
@@ -23,20 +21,35 @@ class CategoriesService
         return $product ? $product->getAttributes() : null;
     }
 
-    public static function removeCategory($productId)
+    public static function removeCategory($productId, Team $team)
     {
         $product = Category::find($productId);
+
+        if (!$product->team_id == $team->id)
+            return false;
+
         return $product ? $product->delete() : false;
     }
 
-    public static function updateCategory($categoryId, $attributes)
+    public static function updateCategory($categoryId, Team $team, $attributes)
     {
-        return $categoryId ? Category::find($categoryId)->update($attributes) : false;
+        $category = $categoryId ? Category::find($categoryId) : null;
+
+        if (!$category->team_id == $team->id)
+            return false;
+
+        return $category ? $category->update($attributes) : false;
     }
 
-    public static function addCategory(Request $request)
+    public static function addCategory(Request $request, Team $team)
     {
         $categoryName = $request->input('name');
-        return Category::firstOrCreate('name', strtolower($categoryName), ['name' => strtolower($categoryName)]);
+        return Category::firstOrCreate([
+            ['name', '=', strtolower($categoryName)],
+            ['team_id', '=', $team->id],
+        ], [
+            'name' => strtolower($categoryName),
+            'team_id' => $team->id
+        ]);
     }
 }

@@ -200,7 +200,7 @@ class Router
         if (is_object($middlewareRet) && $middlewareRet::class == MiddlewareResponse::class && $middlewareRet->getResult() === false) {
             return $middlewareRet->getResponse()?->send();
         }
-        // If no middleware returned false, call the route's controller method 
+        // If no middleware returned false, call the route's controller method
         ob_start();
         $resp = call_user_func_array([$route['controllerClass'], $route["method"]], [...$this->mapParameters($controllerModels, $routeModels), $middlewareRet]);
         if (gettype($resp) == 'object' && $resp::class == Response::class) {
@@ -229,17 +229,12 @@ class Router
      * @param array $prefixes An array of prefixes
      * @return array An array of extracted tokens
      */
-    private function extractTokensFromRoute($route, $prefixes)
+    private function extractTokensFromRoute($route, $prefix)
     {
-        // Check if the request URI has a prefix (e.g. /api/users)
-        $firstLevel = isset($group);
-        $realPath = $firstLevel ? substr($this->requestURI, strlen($firstLevel) + 1) : $this->requestURI;
+        $prefixLen = $prefix ? strlen($prefix) + 1 : 0;
+        $path = substr($this->requestURI, $prefixLen );
 
-        $uriPaths = preg_split('/\//', $realPath, -1, PREG_SPLIT_NO_EMPTY) ?? [];
-        if ($prefixes) {
-            unset($uriPaths[0]);
-            $uriPaths = array_values($uriPaths);
-        }
+        $uriPaths = preg_split('/\//', $path, -1, PREG_SPLIT_NO_EMPTY) ?? [];
         $transformedURI = array_map(function ($value, $key) use ($uriPaths, $route) {
             return $uriPaths[$key] = isset($route['bindings'][$key]['token']) ? $uriPaths[$key] : null;
         }, $uriPaths, array_keys($uriPaths));
@@ -281,8 +276,9 @@ class Router
      * @param array $prefixes An array of prefixes
      * @return void
      */
-    private function formatBindings(&$route, $prefixes)
+    private function formatBindings(&$route, $group)
     {
+        $prefixes = $group['prefix'] ?? [];
         $tokens = array_column($route['bindings'], 'token');
         $position = array_combine($tokens, array_keys($route['bindings']));
         $values = array_combine($tokens, $this->extractTokensFromRoute($route, $prefixes));
@@ -301,14 +297,16 @@ class Router
      * @param string $group The group prefix.
      * @return string The transformed route prototype.
      */
-    private function transformGroupToRoutePrototype($route, $group)
+    private function transformGroupToRoutePrototype($route, $prefix)
     {
         // Check if the request URI has a prefix (e.g. /api/users)
-        $firstLevel = isset($group);
-        $realPath = $firstLevel ? substr($this->requestURI, strlen($firstLevel)) : $this->requestURI;
+        $hasPrefix = isset($prefix);
+
+        $realPath = $hasPrefix ? substr($this->requestURI, strlen($prefix)) : $this->requestURI;
 
         $uriPaths = preg_split('/\//', $realPath, -1, PREG_SPLIT_NO_EMPTY) ?? [];
-        if ($group) {
+
+        if ($hasPrefix) {
             unset($uriPaths[0]);
             $uriPaths = array_values($uriPaths);
         }
@@ -331,14 +329,50 @@ class Router
     {
         // Filter the array based on the condition that the key is equal to the value
         $filtered = array_filter($arr, function ($value, $key) use ($prefix) {
-            return $prefix ? "/{$prefix}{$key}" : $key === $value;
+            return ($prefix ? "/{$prefix}{$key}" : $key) === $value;
         }, ARRAY_FILTER_USE_BOTH);
-
-        $filtered = array_flip($filtered);
 
         // Get the first element of the filtered array
         $ret = reset($filtered);
+
         return $ret;
+    }
+
+    function matchUrlToRoute($url, $method, $route)
+    {
+        $isGroup = isset($route["type"]) && $route["type"] === "group";
+        $group = $isGroup ? $route : null;
+        $routes = $isGroup ? $route['routes'] : $route;
+        $url = trim($url, '/');
+
+        if (isset($routes[$method])) {
+            $url_parts = explode('/', $url);
+
+            foreach ($routes[$method] as $route) {
+                $prefix = isset($group['prefix']) ? $group['prefix'] : '';
+                $route_location = trim($prefix . $route['location'], '/');
+                $route_parts = explode('/', $route_location);
+
+                if (count($route_parts) !== count($url_parts)) {
+                    continue;
+                }
+
+                $match = true;
+                foreach ($route_parts as $i => $route_part) {
+                    if (preg_match('/^{[a-zA-Z]+}$/', $route_part)) {
+                        continue;
+                    } elseif ($route_part !== $url_parts[$i]) {
+                        $match = false;
+                        break;
+                    }
+                }
+
+                if ($match) {
+                    return $route;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -349,43 +383,52 @@ class Router
      */
     private function matchRoute($route)
     {
+        $matchedRoute = $this->matchUrlToRoute($this->requestURI, $this->requestMethod, $route);
 
-        $isGroup = isset($route["type"]) && $route["type"] === "group";
-
-        $firstLevel = explode('/', $this->requestURI)[1];
-        $routeObject = $route['routes'] ?? $route;
-        $prefixes = array_fill(0, count($routeObject), $route['prefix']);
-        $uriPrototypes = array_combine(array_keys($routeObject), array_map([$this, 'transformGroupToRoutePrototype'], $routeObject, $prefixes));
-        $requestURIPrototype = $this->getFirstMatch($uriPrototypes, $route['prefix']) ?? $this->requestURI;
-
-        $matchedRoute = isset($route['routes'][$requestURIPrototype]) ?
-            $route['routes'][$requestURIPrototype] : (isset($route[$requestURIPrototype])
-                ? $route[$requestURIPrototype] :
-                null);
-
-        if (
-            $isGroup
-            && isset($route['prefix']) && $firstLevel == $route['prefix']
-            && isset($route['routes'][$requestURIPrototype])
-            && $route['routes'][$requestURIPrototype]['httpMethod'] === $this->requestMethod
-            || $isGroup
-            && !isset($route['prefix'])
-            && isset($route['routes'][$requestURIPrototype])
-            && $route['routes'][$requestURIPrototype]['httpMethod'] === $this->requestMethod
-        ) {
-            if ($this->hasBindings($matchedRoute)) {
-                $this->formatBindings($matchedRoute, $prefixes);
-            }
-            return $matchedRoute;
-        } elseif (
-            isset($route[$requestURIPrototype])
-            && $route[$requestURIPrototype]['httpMethod'] === $this->requestMethod
-        ) {
-            if ($this->hasBindings($matchedRoute)) {
-                $this->formatBindings($matchedRoute, $prefixes);
-            }
+        if ($matchedRoute) {
+            $this->formatBindings($matchedRoute, $route);
             return $matchedRoute;
         }
+
+        return false;
+
+        // var_dump($route);
+        // die;
+
+        // $routeObject = $isGroup ? $route['routes'][$this->requestMethod] ?? null : $route;
+        // if ($routeObject === null)
+        //     return null;
+        // $prefixes = array_fill(0, count($routeObject), $route['prefix']);
+        // $uriPrototypes = isset($routeObject) ? array_column($routeObject, 'location') : null;
+        // if (!$uriPrototypes)
+        //     return null;
+
+        // $requestURIPrototype = $this->getFirstMatch($uriPrototypes, $route['prefix']) ?? $this->requestURI;
+
+        // // if ($isGroup) {
+        // //     $routePrefixExists = isset($route['prefix']) && $firstLevel === $route['prefix'];
+        // //     $routeURIMatchExists = isset($route['routes'][$requestURIPrototype]) && $route['routes'][$requestURIPrototype]['httpMethod'] === $this->requestMethod;
+        // //     if (($routePrefixExists && $routeURIMatchExists) || (!isset($route['prefix']) && $routeURIMatchExists)) {
+        // //         $this->hasBindings($matchedRoute) && $this->formatBindings($matchedRoute, $prefixes);
+        // //         return $matchedRoute;
+        // //     }
+        // // } elseif (isset($route[$requestURIPrototype]) && $route[$requestURIPrototype]['httpMethod'] === $this->requestMethod) {
+        // //     $this->hasBindings($matchedRoute) && $this->formatBindings($matchedRoute, $prefixes);
+        // //     return $matchedRoute;
+        // // }
+
+        // if ($isGroup) {
+        //     $routePrefixExists = isset($route['prefix']);
+        //     $routeURIMatchExists = isset($route['routes'][$this->requestMethod][$requestURIPrototype]) && $route['routes'][$this->requestMethod][$requestURIPrototype]['location'] == $requestURIPrototype;
+        //     if (($routePrefixExists && $routeURIMatchExists) || (!isset($route['prefix']) && $routeURIMatchExists)) {
+        //         var_dump($route['routes'][$this->requestMethod]);
+        //         die;
+        //         $this->hasBindings($matchedRoute) && $this->formatBindings($matchedRoute, $prefixes);
+        //         return $matchedRoute;
+        //     }
+        // }
+
+        // return null;
     }
 
     /**
@@ -454,8 +497,6 @@ class Router
         return true;
     }
 
-
-
     /**
      * Constructor for the Router class.
      *
@@ -469,7 +510,7 @@ class Router
         $this->request = RequestSingleton::getInstance()->getRequest();
         $files = $this->loadRoutes();
 
-        $this->addHook('before', [$this,'setPrevUrl']);
+        $this->addHook('before', [$this, 'setPrevUrl']);
 
         if (!$this->runHooks('before')) {
             return;

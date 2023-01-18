@@ -1,6 +1,8 @@
 <?php
 
 use App\Database\Transaction;
+use App\FileStorage;
+use App\FileStorageSingleton;
 use App\Router\Response;
 use App\TransactionSingleton;
 
@@ -42,27 +44,7 @@ function dt()
 {
     $result = '';
     foreach (func_get_args() as $x) {
-        if (!is_array($x) && !is_object($x)) {
-            $result .= var_export($x, true);
-        } elseif (is_array($x)) {
-            foreach ($x as $y) {
-                $result .= dt($y);
-            }
-        } elseif (is_object($x)) {
-            if (method_exists($x, 'get_object_vars')) {
-                $x = $x->get_object_vars();
-            } else {
-                // If the argument is an object, get its protected and private
-                // properties and make them accessible.
-                $reflectionObject = new ReflectionObject($x);
-                $properties = $reflectionObject->getProperties(ReflectionProperty::IS_PROTECTED);
-                foreach ($properties as $property) {
-                    $property->setAccessible(true);
-                    $x->{$property->getName()} = $property->getValue($x);
-                }
-            }
-            $result .= '<pre>' . htmlentities(json_encode(utf8ize($x), JSON_PRETTY_PRINT)) . '</pre>';
-        }
+        $result .= json_encode($x, JSON_PRETTY_PRINT);
     }
     response()->body($result)->send();
     return;
@@ -125,6 +107,11 @@ function response(): Response
 function transaction(): Transaction
 {
     return TransactionSingleton::getInstance()->getTransaction();
+}
+
+function filestorage(): FileStorage
+{
+    return FileStorageSingleton::getInstance()->getFileStorage();
 }
 
 /**

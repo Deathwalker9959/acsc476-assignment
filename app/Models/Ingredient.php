@@ -6,4 +6,5 @@ use App\Models\Traits\Timestamps;
 class Ingredient extends Model
 {
     use Timestamps;
+    public static $table = "ingredients";
 }

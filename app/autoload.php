@@ -20,6 +20,7 @@ define("CONTROLLERS_DIR", __DIR__ . '/Controllers/');
 define("SERVICES_DIR", __DIR__ . '/Services/');
 define("VIEWS_DIR", __DIR__ . '/Views/');
 define("ASSETS_DIR", __DIR__ . '/public/assets/');
+define("STORAGE_PATH", __DIR__ . '/public/storage');
 define("APP_CONFIG", require_once(__DIR__ . '/config.php'));
 define("TIME_FORMAT", 'Y-m-d H:i:s');
 class Autoloader
@@ -158,6 +159,7 @@ class Autoloader
         }
 
         RouterSingleton::getInstance();
+        FileStorageSingleton::getInstance();
     }
 }
 

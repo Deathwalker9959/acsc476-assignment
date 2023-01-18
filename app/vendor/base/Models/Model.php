@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Traits\HardDeletes;
 use App\Models\Traits\SoftDeletes;
 use App\Models\Traits\Timestamps;
 use PDO;
@@ -24,7 +23,7 @@ class Model
     /**
      * @var object $attributes The model's attributes
      */
-    protected $attributes;
+    public $attributes;
 
     /**
      * @var array $hidden The attributes that should be hidden from the JSON and array representations of the model
@@ -36,7 +35,7 @@ class Model
      *
      * @var string
      */
-    protected static $primaryKey = 'id';
+    public static $primaryKey = 'id';
 
     /**
      * The query builder instance.
@@ -67,6 +66,7 @@ class Model
         static::$queryBuilder = QueryBuilderSingleton::getInstance()->getQueryBuilder();
 
         $this->attributes = $attributes;
+        self::$primaryKey = static::$primaryKey;
     }
 
     /**
@@ -208,10 +208,10 @@ class Model
     public function update(array $attributes)
     {
         static::$queryBuilder->reset();
-        unset($attributes[$this->primaryKey]);
+        unset($attributes[static::$primaryKey]);
         static::$queryBuilder->update($attributes)
             ->table(static::$table)
-            ->where($this->primaryKey, '=', $this->{$this->primaryKey});
+            ->where(static::$primaryKey, '=', $this->{static::$primaryKey});
 
         $stmt = static::$queryBuilder->getPDOStatement();
         return $stmt->execute();
@@ -237,6 +237,15 @@ class Model
             return $stmt->execute();
         }
     }
+
+    public function remove() {
+        static::$queryBuilder->reset();
+        $table = static::getTable();
+        $query = static::$queryBuilder->delete()->from($table)->where(static::$primaryKey, '=', $this->attributes->{static::$primaryKey});
+        $stmt = $query->getPDOStatement();
+        $stmt->execute();
+    }
+
 
     public static function count()
     {
@@ -300,17 +309,109 @@ class Model
         return static::$queryBuilder->fetchColumn();
     }
 
-    public function hasMany(string $related, string $foreignKey, string $localKey): QueryBuilder
+    public function hasOne(string $related, string $foreignKey = null, string $localKey = null)
     {
         static::$queryBuilder->reset();
-        $relatedModel = new $related;
-        $relatedTable = $relatedModel::getTable();
-        $thisTable = static::getTable();
-        return static::$queryBuilder->select()
-            ->from("{$relatedTable} AS r")
-            ->join("{$thisTable} AS l", "r.{$foreignKey}", "=", "l.{$localKey}")
-            ->where("l.{$localKey}", "=", $this->{$localKey});
+
+        // Set default foreign and local keys if not provided
+        if ($foreignKey === null) {
+            $foreignKey = strtolower(static::getTable()) . '_id';
+        }
+        if ($localKey === null) {
+            $localKey = 'id';
+        }
+
+        // Get the name of the related table
+        $relatedTable = $related::getTable();
+
+        // Build the query
+        $query = static::$queryBuilder
+            ->select()
+            ->from($relatedTable)
+            ->where($relatedTable . '.' . $foreignKey, '=', $this->attributes->{$localKey});
+
+        // Execute the query and fetch the result
+        $stmt = $query->getPDOStatement();
+        $stmt->execute();
+        $result = $stmt->fetch();
+
+        // Create a related model instance
+        $relatedModel = new $related($result);
+
+        // Return the related model
+        return $relatedModel;
     }
+
+    public function hasOneThrough($relatedModel, $throughModel, $foreignKey = null, $throughKey = null, $localKey = null)
+    {
+        static::$queryBuilder->reset();
+        // Set default foreign and through keys if not provided
+        if ($foreignKey === null) {
+            $foreignKey = strtolower((new $relatedModel)->getTable()) . '_id';
+        }
+        if ($throughKey === null) {
+            $throughKey = strtolower((new $throughModel)->getTable()) . '_id';
+        }
+
+        // Get the names of the related and through tables
+        $relatedTable = $relatedModel::getTable();
+        $throughTable = $throughModel::getTable();
+
+        // Build the query
+        $query = static::$queryBuilder
+            ->select()
+            ->from($relatedTable)
+            ->join($throughTable, $relatedTable . '.' . $foreignKey, '=', $throughTable . '.' . $throughKey)
+            ->where($throughTable . '.' . $localKey, '=', $this->attributes->{static::$primaryKey});
+
+        // Execute the query and fetch the results
+        $stmt = $query->getPDOStatement();
+        $stmt->execute();
+        $result = $stmt->fetch();
+
+        // Create an related model instance
+        $relatedModel = new $relatedModel($result);
+
+        // Return the related model
+        return $relatedModel;
+    }
+
+    public function hasMany(string $related, string $foreignKey = null, string $localKey = null)
+    {
+        static::$queryBuilder->reset();
+
+        // Set default foreign and local keys if not provided
+        if ($foreignKey === null) {
+            $foreignKey = strtolower((new $related)->getTable()) . '_id';
+        }
+        if ($localKey === null) {
+            $localKey = strtolower(static::getTable()) . '_id';
+        }
+
+        // Get the name of the related table
+        $relatedTable = $related::getTable();
+
+        // Build the query
+        $query = static::$queryBuilder
+            ->select()
+            ->from($relatedTable)
+            ->where($relatedTable . '.' . $foreignKey, '=', $this->attributes->{$localKey});
+
+        // Execute the query and fetch the results
+        $stmt = $query->getPDOStatement();
+        $stmt->execute();
+        $results = $stmt->fetchAll();
+
+        // Create an array of related model instances
+        $relatedModels = [];
+        foreach ($results as $result) {
+            $relatedModels[] = new $related($result);
+        }
+
+        // Return the array of related models
+        return $relatedModels;
+    }
+
     public function hasManyThrough($relatedModel, $throughModel, $foreignKey = null, $throughKey = null, $localKey = null)
     {
         static::$queryBuilder->reset();
@@ -331,11 +432,10 @@ class Model
             ->select()
             ->from($relatedTable)
             ->join($throughTable, $relatedTable . '.' . $foreignKey, '=', $throughTable . '.' . $throughKey)
-            ->where($throughTable . '.' . $localKey, '=', $this->attributes->{$this->primaryKey});
+            ->where($throughTable . '.' . $localKey, '=', $this->attributes->{static::$primaryKey});
 
         // Execute the query and fetch the results
         $stmt = $query->getPDOStatement();
-        dd($query->toSql());
         $stmt->execute();
         $results = $stmt->fetchAll();
 
@@ -391,20 +491,19 @@ class Model
      * Retrieves a model object with a given attribute value, or creates a new model object with the given attribute value if one does not exist
      *
      * @param string $attribute The attribute to check
-     * @param mixed $value The value to check for
      * @param array $attributes The attributes to set for the new model object if one is created
      * @return Model The model object with the given attribute value
      */
-    public static function firstOrCreate($attribute, $value, $attributes = [])
+    public static function firstOrCreate($attributes, $createAttributes)
     {
         static::$queryBuilder->reset();
-        $model = static::$queryBuilder->from(static::$table)->where($attribute, '=', $value)->first();
+        $model = static::where($attributes)->first();
         if (!$model) {
-            $attributes[$attribute] = $value;
-            $model = new static($attributes);
+            $model = new static($createAttributes);
             return $model->save();
         }
-        return null;
+
+        return new static($model);
     }
 
     /**
@@ -426,10 +525,10 @@ class Model
 
     public function save()
     {
-        if (isset($this->{$this->primaryKey})) {
+        if (isset($this->attributes->{static::$primaryKey})) {
             // If primary key is set, update record
             if (self::hasTimestamps()) {
-                $this->attributes['updated_at'] = date('Y-m-d H:i:s');
+                $this->attributes->updated_at = date('Y-m-d H:i:s');
             }
             return static::update((array) $this->attributes);
         } else {

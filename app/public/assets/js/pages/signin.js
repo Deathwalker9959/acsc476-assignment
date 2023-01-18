@@ -3,8 +3,6 @@ function handleFormSubmit() {
     let form = $('#signin-form');
     let isValid = form[0].checkValidity();
 
-    console.log(isValid);
-
     if (!isValid) {
         return new Swal("Error", "The details entered are invalid", "error");
     }
@@ -18,11 +16,11 @@ function handleFormSubmit() {
             'Content-Type': 'multipart/form-data'
         }
     })
-        .then(response => {
-            // If the request is successful, redirect to the "/shops" route
-            window.location.replace(formData['partner'] ? '/dashboard' : '/shops');
-        })
-        .catch(error => {
-            return new Swal("Error", error?.response?.data, "error");
-        });
+    .then(response => {
+        // If the request is successful, redirect to the "/shops" route
+        window.location.replace(formData['partner'] ? '/dashboard' : '/shops');
+    })
+    .catch(error => {
+        return new Swal("Error", error?.response?.data, "error");
+    });
 }  

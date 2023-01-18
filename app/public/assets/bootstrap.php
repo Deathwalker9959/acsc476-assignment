@@ -17,6 +17,7 @@
         referrerpolicy="no-referrer"></script>
     <script async src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script async src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.3/font/bootstrap-icons.min.css" integrity="sha512-YFENbnqHbCRmJt5d+9lHimyEMt8LKSNTMLSaHjvsclnZGICeY/0KYEeiHwD1Ux4Tcao0h60tdcMv+0GljvWyHg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script type="importmap">
     {
       "imports": {

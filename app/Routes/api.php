@@ -4,59 +4,65 @@ use App\Router\Route;
 
 return [
     Route::Group([
-        'prefix' => 'api'
+        "prefix" => "api"
     ], [
         Route::Post("/register", "AccountsController@handleRegister"),
         Route::Post("/login", "AccountsController@handleLogin"),
         Route::Post("/logout", "AccountsController@logout"),
     ]),
     Route::Group([
-        'prefix' => 'partner'
+        "prefix" => "partner/api"
     ], [
-        Route::Post("/api/register", "AccountsController@handlePartnerRegister"),
-        Route::Post("/api/login", "AccountsController@handlePartnerLogin"),
+        Route::Post("/register", "AccountsController@handlePartnerRegister"),
+        Route::Post("/login", "AccountsController@handlePartnerLogin"),
     ]),
     Route::Group([
-        'prefix' => 'api',
-        'middleware' => ['auth']
+        "prefix" => "api",
+        "middleware" => ["auth"]
     ], [
         Route::Get("/shops", "ShopsController@indexShops"),
+        Route::Get("/shops/{team}/products", "SellersController@indexProducts"),
+        Route::Get("/shops/{team}/wishlist", "WishlistController@indexWishlist"),
+        Route::Put("/shops/{team}/wishlist", "WishlistController@updateWishlist"),
+        Route::Delete("/shops/{team}/wishlist", "WishlistController@deleteWishlist"),
     ]),
     Route::Group([
-        'middleware' => ['authPartner']
+        "prefix" => "partner/api",
+        "middleware" => ["authPartner"]
     ], [
-        Route::Get("/dashboard", "SellersController@index"),
-    ]),
-    Route::Group([
-        'prefix' => 'partner',
-        // 'middleware' => ['authPartner']
-    ], [
+
+        Route::Get("/shops/{team}", "SellersController@indexAll"),
         /*
         * Products
         */
-        Route::Post("/api/shops/{team}/products", "SellersController@addProduct"),
-        Route::Delete("/api/shops/{team}/products/{product}", "SellersController@removeProduct"),
-        Route::Put("/api/shops/{team}/products/{product}", "SellersController@updateProduct"),
+        Route::Get("/shops/{team}/products", "SellersController@indexProducts"),
+        Route::Post("/shops/{team}/products", "SellersController@addProduct"),
+        Route::Delete("/shops/{team}/products/{product}", "SellersController@removeProduct"),
+        Route::Put("/shops/{team}/products/{product}", "SellersController@updateProduct"),
         /*
         * Categories
         */
-        Route::Post("/api/shops/categories", "SellersController@addCategory"),
-        Route::Delete("/api/shops/categories/{category}", "SellersController@removeCategory"),
-        Route::Put("/api/shops/categories/{category}", "SellersController@updateCategory"),
+        Route::Post("/shops/{team}/categories", "SellersController@addCategory"),
+        Route::Delete("/shops/{team}/categories/{category}", "SellersController@removeCategory"),
+        Route::Put("/shops/{team}/categories/{category}", "SellersController@updateCategory"),
         /*
         * Hazards
         */
-        Route::Post("/api/shops/hazards", "SellersController@addHazard"),
-        Route::Delete("/api/shops/hazards/{hazard}", "SellersController@removeHazard"),
-        Route::Put("/api/shops/hazards/{hazard}", "SellersController@updateHazard"),
+        Route::Post("/shops/{team}/hazards", "SellersController@addHazard"),
+        Route::Delete("/shops/{team}/hazards/{hazard}", "SellersController@removeHazard"),
+        Route::Put("/shops/{team}/hazards/{hazard}", "SellersController@updateHazard"),
         /*
         * Ingredients
         */
-        Route::Post("/api/shops/{team}/products", "SellersController@addIngredient"),
-        Route::Delete("/api/shops/{team}/products/{ingredient}", "SellersController@removeIngredient"),
-        Route::Put("/api/shops/{team}/products/{ingredient}", "SellersController@updateIngredient"),
+        Route::Post("/shops/{team}/products/ingredients", "SellersController@addIngredient"),
+        Route::Delete("/shops/{team}/products/{ingredient}", "SellersController@removeIngredient"),
+        Route::Put("/shops/{team}/products/{ingredient}", "SellersController@updateIngredient"),
 
-        Route::Get("/api/shops", "ShopsController@indexOwnedShops"),
-        Route::Get("/api/shops/{team}/products/get", "ShopsController@indexOwnedShops"),
+        /*
+        * Shops
+        */
+        Route::Get("/shops", "ShopsController@indexOwnedShops"),
+        Route::Post("/shops", "ShopsController@createShop"),
+        Route::Put("/shops/{team}", "ShopsController@updateShop"),
     ]),
 ];

@@ -51,15 +51,18 @@ class Route
 
         // Build the fully qualified class name for the controller
         $controllerClass = "App\\Controllers\\{$class}";
+        $httpMethod = strtoupper($httpMethod);
 
         // Return an array of route information
         return [
-            "{$location}" => [
-                "httpMethod" => strtoupper($httpMethod), // Convert the HTTP method to uppercase
-                "controllerClass" => $controllerClass, // The fully qualified class name of the controller
-                "method" => $method, // The method to be called on the controller
-                "bindings" => $bindings,
-            ],
+            "{$httpMethod}" => [
+                [
+                    "location" => $location,
+                    "controllerClass" => $controllerClass, // The fully qualified class name of the controller
+                    "method" => $method, // The method to be called on the controller
+                    "bindings" => $bindings,
+                ],
+            ]
         ];
     }
 
@@ -188,7 +191,7 @@ class Route
         $middleware = $options['middleware'] ?? null;
 
         // Flatten the array of routes
-        $flattenedRoutes = call_user_func_array('array_merge', $routes);
+        $flattenedRoutes = call_user_func_array('array_merge_recursive', $routes);
 
         // Return an array of route information for the group
         return [

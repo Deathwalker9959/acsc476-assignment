@@ -17,7 +17,7 @@ use App\Session;
 <body>
     <header class="site-header sticky-top py-1">
         <nav class="container d-md-flex d-sm-inline-flex flex-column flex-md-row justify-content-between shadow-sm navbar-dark">
-            <a class="navbar-brand py-2" href="#" aria-label="Product">
+            <a class="navbar-brand py-2" href="#" id="branding" aria-label="Product">
                 <svg class="text-grey" xmlns="http://www.w3.org/2000/svg" fill="currentColor" width="24" height="24" viewBox="0 0 512 512">
                     <title>order.io</title>
                     <path d="M160 265.2c0 8.5-3.4 16.6-9.4 22.6l-26.8 26.8c-12.3 12.3-32.5 11.4-49.4 7.2C69.8 320.6 65 320 60 320c-33.1 0-60 26.9-60 60s26.9 60 60 60c6.3 0 12 5.7 12 12c0 33.1 26.9 60 60 60s60-26.9 60-60c0-5-.6-9.8-1.8-14.5c-4.2-16.9-5.2-37.1 7.2-49.4l26.8-26.8c6-6 14.1-9.4 22.6-9.4H336c6.3 0 12.4-.3 18.5-1c11.9-1.2 16.4-15.5 10.8-26c-8.5-15.8-13.3-33.8-13.3-53c0-61.9 50.1-112 112-112c8 0 15.7 .8 23.2 2.4c11.7 2.5 24.1-5.9 22-17.6C494.5 62.5 422.5 0 336 0C238.8 0 160 78.8 160 176v89.2z" />
@@ -54,67 +54,9 @@ use App\Session;
         <div class="container">
             <div class="row my-4">
                 <div class="col-12 col-md-3 d-md-flex px-4 aside d-none">
-                    <div class="d-flex flex-column flex-grow-1 p-3 text-white bg-dark shadow sidemenu">
-                        <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-                            <svg class="bi me-2" width="40" height="32">
-                                <use xlink:href="#bootstrap"></use>
-                            </svg>
-                            <span class="fs-4">Sidebar</span>
-                        </a>
-                        <hr>
-                        <ul class="nav nav-pills flex-column mb-auto">
-                            <li class="nav-item">
-                                <a href="#" class="nav-link active" aria-current="page">
-                                    <svg class="bi me-2" width="16" height="16">
-                                        <use xlink:href="#home"></use>
-                                    </svg>
-                                    Home
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" class="nav-link text-white">
-                                    <svg class="bi me-2" width="16" height="16">
-                                        <use xlink:href="#speedometer2"></use>
-                                    </svg>
-                                    Dashboard
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" class="nav-link text-white">
-                                    <svg class="bi me-2" width="16" height="16">
-                                        <use xlink:href="#table"></use>
-                                    </svg>
-                                    Orders
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" class="nav-link text-white">
-                                    <svg class="bi me-2" width="16" height="16">
-                                        <use xlink:href="#grid"></use>
-                                    </svg>
-                                    Products
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" class="nav-link text-white">
-                                    <svg class="bi me-2" width="16" height="16">
-                                        <use xlink:href="#people-circle"></use>
-                                    </svg>
-                                    Customers
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
+                    <div id="sidebar-container" class="d-flex flex-column flex-grow-1 p-3 text-white bg-dark shadow sidemenu"></div>
                 </div>
                 <div id="spa-container" class="col-12 col-md-9">
-                    <div class="row">
-                        <div class="col-12 d-flex justify-content-center align-items-center cursor-pointer add-object" id="addItem">
-                            <div class="text-center">
-                                <p class="my-1">Add Product</p>
-                                <i class="fas fa-plus fa-3x text-secondary"></i>
-                            </div>
-                        </div>
-                    </div>  
                 </div>
             </div>
         </div>

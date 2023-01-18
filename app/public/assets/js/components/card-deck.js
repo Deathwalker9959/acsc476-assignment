@@ -4,22 +4,33 @@ let shopCardTemplate = (shop) => {
         <a href="#" class="stretched-link"></a>
         <div class="row h-100">
             <div class="col-md-12 h-100">
+            ${shop?.photo_url ? /*html*/`
                 <img
-                    class="w-100 overflow-clip"
+                    class="w-100 overflow-clip card-img"
                     height="200"
-                    ${shop?.thumbnailUrl ? "src=" + shop?.thumbnailUrl : ""}
+                    ${shop?.photo_url ? "src=" + shop?.photo_url : ""}
                 />
+                `
+            : /*html*/`
+                <svg
+                    class="w-100 overflow-clip card-img"
+                    height="200"
+                >
+                    <title>Placeholder</title>
+                    <rect width="100%" height="100%" fill="#868e96"></rect>
+                </svg>
+                `
+        }
             </div>
         </div>
         <div class="row shop-details">
-            <div class="col-md-8">
+            <div class="col-md-8 my-auto">
                 <strong>${shop?.name ?? ""}</strong>
                 <br />
                 <small class="text-secondary shop-details-secondary">${shop?.category ?? ""}</small>
             </div>
-            <div class="col-md-4">Col 2</div>
             <div class="delivery-holder text-center">
-                <i class="fa fa-motorcycle"> &euro;${shop?.deliveryPrice ?? ""}</i>
+                <i class="fa fa-motorcycle">${shop?.delivery_price ? `<span class="mx-1">&euro;</span>${shop.delivery_price}` : " free"}</i>
             </div>
         </div>
     </div>
@@ -83,7 +94,7 @@ let template = () => {
 
     return /*html*/`
         <div class="card-deck">
-            ${cards.length > 0 ? cards.join('') : cardDeckTemplate(shopCardSpinnerTemplate(),shopCardSpinnerTemplate())}
+            ${cards.length > 0 ? cards.join('') : cardDeckTemplate(shopCardSpinnerTemplate(), shopCardSpinnerTemplate())}
         </div>
 `;
 };

@@ -3,6 +3,11 @@
   box-shadow: 0 1px 2px 0 rgba(0, 0, 30, 0.1), 0 2px 4px 0 rgba(0, 0, 30, 0.1);
 }
 
+.card.shop .card-img {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
 .row.shop-details {
   height: 68px !important;
   box-sizing: border-box;
@@ -102,6 +107,7 @@ input.form-control {
 */
 
 .aside {
+  height: 100%;
   min-height: 500px;
   max-width: 330px;
 }
@@ -117,7 +123,7 @@ input.form-control {
 .add-object {
   background-color: rgba(109, 118, 126, 0.2);
   transition: background-color ease-in-out 0.2s, border ease-in-out 0.1s;
-  border: 0.3rem dotted rgba(108, 117, 125,0);
+  border: 0.3rem dotted rgba(108, 117, 125, 0);
   border-radius: 0.5em;
 }
 
@@ -128,4 +134,105 @@ input.form-control {
 
 .swal2-input.swal2-select {
   height: auto;
+}
+
+#sidebar-container .nav-link:hover {
+  transition: background-color 0.2;
+  background-color: rgba(13, 110, 253, 0.5);
+}
+
+.category {
+  border: thin solid #6c757d;
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+}
+
+.product-row > * {
+  min-height: 130px;
+}
+
+.product-name {
+  font-size: 0.9em;
+}
+.product-price {
+  font-size: 0.9em;
+  font-weight: normal;
+}
+
+.product-image {
+  object-fit: cover;
+  object-position: center center;
+}
+
+input.form-control[type="file"] {
+  padding-top: 0.375rem !important;
+}
+
+.row-with-buttons .edit-remove-buttons {
+  position: absolute;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.row-with-buttons:hover .edit-remove-buttons {
+  display: block;
+  opacity: 1;
+}
+
+.edit-remove-buttons {
+  z-index: 2;
+  right: 0;
+  top: 0;
+  height: 100%;
+}
+
+.edit-remove-buttons > .edit-item,
+.edit-remove-buttons > .remove-item {
+  height: 100%;
+  width: 128px;
+}
+
+/*
+* Dropdown css
+*/
+.dropdown {
+  position: relative;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #343a40;
+  min-width: 300px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1000;
+  margin-top: 0.35em;
+  list-style: none;
+  transform: translate(calc(-300px + 30px), 5px);
+  padding: 1em 1em 1em 1em;
+  border-radius: 0.5em;
+}
+
+.dropdown-content a {
+  color: #dee2e6;
+  padding: 8px 16px;
+  text-decoration: none;
+  display: block;
+  transition: color 0.2 ease-in-out;
+  border-radius: 0.5em;
+}
+
+.dropdown-content a.active {
+  background-color: #0a58ca;
+}
+
+.dropdown-content a.active:hover {
+  background-color: #0a58ca;
+  color: #dee2e6;
+}
+
+.dropdown-content a:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #fff;
 }

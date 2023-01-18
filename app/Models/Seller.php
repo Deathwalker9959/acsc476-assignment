@@ -8,9 +8,11 @@ class Seller extends Model
 {
     use Timestamps;
 
+    public static $table = "sellers";
+
     public function teams()
     {
-        return $this->hasManyThrough(Team::class, TeamUser::class, 'id', 'team_id', 'seller_id');
+        return $this->hasMany(Team::class,'owner_id','id');
     }
 
     public function teamIds()

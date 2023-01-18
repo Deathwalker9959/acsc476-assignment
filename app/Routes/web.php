@@ -19,7 +19,7 @@ return [
     ]),
     Route::Group([
         "middleware" => [
-            "AuthPartner"
+            "authPartner"
         ]
     ], [
         Route::Get("/dashboard", "SellersController@index"),

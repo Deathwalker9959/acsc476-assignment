@@ -68,82 +68,6 @@
                 </div>
             </div>
         </div>
-
-        <div class="d-md-flex flex-md-equal w-100 my-md-3 ps-md-3">
-            <div class="bg-dark me-md-3 pt-3 px-3 pt-md-5 px-md-5 text-center text-white overflow-hidden">
-                <div class="my-3 py-3">
-                    <h2 class="display-5">Another headline</h2>
-                    <p class="lead">And an even wittier subheading.</p>
-                </div>
-                <div class="bg-light shadow-sm mx-auto" style="width: 80%; height: 300px; border-radius: 21px 21px 0 0">
-                </div>
-            </div>
-            <div class="bg-light me-md-3 pt-3 px-3 pt-md-5 px-md-5 text-center overflow-hidden">
-                <div class="my-3 p-3">
-                    <h2 class="display-5">Another headline</h2>
-                    <p class="lead">And an even wittier subheading.</p>
-                </div>
-                <div class="bg-dark shadow-sm mx-auto" style="width: 80%; height: 300px; border-radius: 21px 21px 0 0">
-                </div>
-            </div>
-        </div>
-
-        <div class="d-md-flex flex-md-equal w-100 my-md-3 ps-md-3">
-            <div class="bg-light me-md-3 pt-3 px-3 pt-md-5 px-md-5 text-center overflow-hidden">
-                <div class="my-3 p-3">
-                    <h2 class="display-5">Another headline</h2>
-                    <p class="lead">And an even wittier subheading.</p>
-                </div>
-                <div class="bg-dark shadow-sm mx-auto" style="width: 80%; height: 300px; border-radius: 21px 21px 0 0">
-                </div>
-            </div>
-            <div class="bg-primary me-md-3 pt-3 px-3 pt-md-5 px-md-5 text-center text-white overflow-hidden">
-                <div class="my-3 py-3">
-                    <h2 class="display-5">Another headline</h2>
-                    <p class="lead">And an even wittier subheading.</p>
-                </div>
-                <div class="bg-light shadow-sm mx-auto" style="width: 80%; height: 300px; border-radius: 21px 21px 0 0">
-                </div>
-            </div>
-        </div>
-
-        <div class="d-md-flex flex-md-equal w-100 my-md-3 ps-md-3">
-            <div class="bg-light me-md-3 pt-3 px-3 pt-md-5 px-md-5 text-center overflow-hidden">
-                <div class="my-3 p-3">
-                    <h2 class="display-5">Another headline</h2>
-                    <p class="lead">And an even wittier subheading.</p>
-                </div>
-                <div class="bg-body shadow-sm mx-auto" style="width: 80%; height: 300px; border-radius: 21px 21px 0 0">
-                </div>
-            </div>
-            <div class="bg-light me-md-3 pt-3 px-3 pt-md-5 px-md-5 text-center overflow-hidden">
-                <div class="my-3 py-3">
-                    <h2 class="display-5">Another headline</h2>
-                    <p class="lead">And an even wittier subheading.</p>
-                </div>
-                <div class="bg-body shadow-sm mx-auto" style="width: 80%; height: 300px; border-radius: 21px 21px 0 0">
-                </div>
-            </div>
-        </div>
-
-        <div class="d-md-flex flex-md-equal w-100 my-md-3 ps-md-3">
-            <div class="bg-light me-md-3 pt-3 px-3 pt-md-5 px-md-5 text-center overflow-hidden">
-                <div class="my-3 p-3">
-                    <h2 class="display-5">Another headline</h2>
-                    <p class="lead">And an even wittier subheading.</p>
-                </div>
-                <div class="bg-body shadow-sm mx-auto" style="width: 80%; height: 300px; border-radius: 21px 21px 0 0">
-                </div>
-            </div>
-            <div class="bg-light me-md-3 pt-3 px-3 pt-md-5 px-md-5 text-center overflow-hidden">
-                <div class="my-3 py-3">
-                    <h2 class="display-5">Another headline</h2>
-                    <p class="lead">And an even wittier subheading.</p>
-                </div>
-                <div class="bg-body shadow-sm mx-auto" style="width: 80%; height: 300px; border-radius: 21px 21px 0 0">
-                </div>
-            </div>
-        </div>
     </main>
 
     <footer class="container py-5">
@@ -159,32 +83,33 @@
             <div class="col-6 col-md">
                 <h5>Features</h5>
                 <ul class="list-unstyled text-small">
-                    <li><a class="link-secondary" href="#">Cool stuff</a></li>
-                    <li><a class="link-secondary" href="#">Random feature</a></li>
-                    <li><a class="link-secondary" href="#">Team feature</a></li>
-                    <li><a class="link-secondary" href="#">Stuff for developers</a></li>
-                    <li><a class="link-secondary" href="#">Another one</a></li>
-                    <li><a class="link-secondary" href="#">Last time</a></li>
+                    <li><a class="link-secondary" href="#">Lorem ipsum dolor sit amet</a></li>
+                    <li><a class="link-secondary" href="#">Consectetur adipiscing elit</a></li>
+                    <li><a class="link-secondary" href="#">Sed do eiusmod tempor incididunt</a></li>
+                    <li><a class="link-secondary" href="#">Ut labore et dolore magna aliqua</a></li>
+                    <li><a class="link-secondary" href="#">Ut enim ad minim veniam</a></li>
+                    <li><a class="link-secondary" href="#">Quis nostrud exercitation ullamco</a></li>
                 </ul>
             </div>
             <div class="col-6 col-md">
                 <h5>Resources</h5>
                 <ul class="list-unstyled text-small">
-                    <li><a class="link-secondary" href="#">Resource name</a></li>
-                    <li><a class="link-secondary" href="#">Resource</a></li>
-                    <li><a class="link-secondary" href="#">Another resource</a></li>
-                    <li><a class="link-secondary" href="#">Final resource</a></li>
+                    <li><a class="link-secondary" href="#">Duis aute irure dolor</a></li>
+                    <li><a class="link-secondary" href="#">In reprehenderit in voluptate</a></li>
+                    <li><a class="link-secondary" href="#">Velit esse cillum dolore eu</a></li>
+                    <li><a class="link-secondary" href="#">Fugiat nulla pariatur</a></li>
                 </ul>
             </div>
             <div class="col-6 col-md">
                 <h5>Resources</h5>
                 <ul class="list-unstyled text-small">
-                    <li><a class="link-secondary" href="#">Business</a></li>
-                    <li><a class="link-secondary" href="#">Education</a></li>
-                    <li><a class="link-secondary" href="#">Government</a></li>
-                    <li><a class="link-secondary" href="#">Gaming</a></li>
+                    <li><a class="link-secondary" href="#">Excepteur sint occaecat</a></li>
+                    <li><a class="link-secondary" href="#">Cupidatat non proident</a></li>
+                    <li><a class="link-secondary" href="#">Sunt in culpa qui officia</a></li>
+                    <li><a class="link-secondary" href="#">Deserunt mollit anim id est laborum</a></li>
                 </ul>
             </div>
+
             <div class="col-6 col-md">
                 <h5>About</h5>
                 <ul class="list-unstyled text-small">

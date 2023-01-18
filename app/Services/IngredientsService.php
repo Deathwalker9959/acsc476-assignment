@@ -10,9 +10,7 @@ class IngredientsService
 {
     public static function indexIngredients(Team $team)
     {
-        $products = array_map(function ($product) {
-            return $product->getAttributes();
-        }, Ingredient::where(['team_id', '=', $team->id])->get());
+        $products = Ingredient::where([['team_id', '=', $team->id]])->get();
 
         return $products;
     }
